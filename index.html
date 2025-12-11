@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="default">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Sense - V25 Ultimate (Refined)</title>
+    <style>
+        /* ==================== 1. 核心视觉样式 (保持不变) ==================== */
+        :root {
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --font-head: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+            /* 默认主题 (Modern Blue) */
+            --bg-color: #f5f5f7;
+            --sidebar-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: #ffffff;
+            --text-main: #1d1d1f;
+            --text-secondary: #86868b;
+            --border: #e5e5ea;
+            
+            /* UI 主题色 */
+            --theme-color: #0071e3;
+            --theme-light: rgba(0, 113, 227, 0.08);
+            --theme-focus: rgba(0, 113, 227, 0.15);
+            
+            /* 优先级颜色 */
+            --shade-1: #003e7e; --shade-2: #0056b3; --shade-3: #0071e3; --shade-4: #4da3ff; --shade-5: #8bc4ff;
+
+            --radius-card: 18px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-hover: 0 8px 24px rgba(0,0,0,0.08);
+            --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        /* --- 暖色主题 (Warm Earth) --- */
+        [data-theme="warm"] {
+            --bg-color: #f3f3ef; --sidebar-bg: #fbfbf9; --card-bg: #ffffff;
+            --text-main: #37352f; --text-secondary: #74726e; --border: #e0e0dc;
+            --theme-color: #4a5d4e;
+            --theme-light: rgba(74, 93, 78, 0.08);
+            --theme-focus: rgba(74, 93, 78, 0.15);
+            --shade-1: #253328; --shade-2: #384a3b; --shade-3: #4a5d4e; --shade-4: #708c76; --shade-5: #9bb0a0;
+            --radius-card: 14px; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        /* --- 粉色主题 (Pink Series) --- */
+        [data-theme="pink"] {
+            --bg-color: #fff0f5; --sidebar-bg: #ffffff; --card-bg: #ffffff;
+            --text-main: #2d2d2d; --text-secondary: #8e8e93; --border: #f2e1e6;
+            --theme-color: #e62e5c;
+            --theme-light: rgba(230, 46, 92, 0.06);
+            --theme-focus: rgba(230, 46, 92, 0.12);
+            --shade-1: #991035; --shade-2: #c41c45; --shade-3: #e62e5c; --shade-4: #f57a99; --shade-5: #fcccd9;
+            --radius-card: 24px; --shadow-sm: 0 8px 24px rgba(230, 46, 92, 0.08);
+        }
+
+        /* --- 新增主题 1: I Miss You (复古红褐) --- */
+        [data-theme="imissyou"] {
+            --bg-color: #f9f7f0; --sidebar-bg: #f9f7f0; --card-bg: #ffffff;
+            --text-main: #4a3b32; --text-secondary: #8f8681; --border: #e8e0d5;
+            --theme-color: #7e3e4a;
+            --theme-light: rgba(126, 62, 74, 0.08);
+            --theme-focus: rgba(126, 62, 74, 0.15);
+            --shade-1: #4a242b; --shade-2: #66323c; --shade-3: #7e3e4a; --shade-4: #b06d7a; --shade-5: #d6abb3;
+            --radius-card: 16px; --shadow-sm: 0 4px 12px rgba(126, 62, 74, 0.06);
+        }
+
+        /* --- 新增主题 2: Deep Pop (深紫撞色) --- */
+        [data-theme="pop"] {
+            --bg-color: #f6f5f8; --sidebar-bg: #ffffff; --card-bg: #ffffff;
+            --text-main: #2C1A32; --text-secondary: #7e7485; --border: #e0dce6;
+            --theme-color: #2C1A32;
+            --theme-light: rgba(44, 26, 50, 0.06);
+            --theme-focus: rgba(44, 26, 50, 0.12);
+            --shade-1: #150c18; --shade-2: #201325; --shade-3: #2C1A32; --shade-4: #604e66; --shade-5: #9e92a3;
+            --radius-card: 20px; --shadow-sm: 0 4px 16px rgba(44, 26, 50, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { font-family: var(--font-stack); background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+        /* ==================== 2. 布局 ==================== */
+        .app-container { display: flex; height: 100vh; position: relative; }
+
+        .sidebar {
+            width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
+            padding-top: 60px; display: flex; flex-direction: column; transition: 0.3s var(--ease);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); flex-shrink: 0; z-index: 20;
+            position: relative;
+        }
+        .sidebar.closed { margin-left: -240px; opacity: 0; }
+        .toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 30; cursor: pointer; padding: 8px; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); }
+        .bar { width: 18px; height: 2px; background: var(--text-main); margin-bottom: 4px; border-radius: 2px; } .bar:last-child { margin: 0; }
+
+        .logo { font-family: var(--font-head); font-size: 20px; font-weight: 800; padding: 0 25px; margin-bottom: 30px; letter-spacing: -0.5px; color: var(--text-main); }
+        
+        .nav-item { padding: 12px 25px; cursor: pointer; font-size: 14px; color: var(--text-secondary); margin: 4px 12px; border-radius: 8px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .nav-item:hover { background: var(--theme-light); color: var(--theme-color); }
+        .nav-item.active { background: var(--theme-color); color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-weight: 600; }
+        .nav-item.active:hover { background: var(--theme-color); color: #ffffff; opacity: 0.9; }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+        .view-section { display: none; opacity: 0; transform: scale(0.99); transition: opacity 0.3s, transform 0.3s; }
+        .view-section.active-view { display: block; opacity: 1; transform: scale(1); }
+        .page-header { font-family: var(--font-head); font-size: 28px; font-weight: 700; margin-bottom: 20px; color: var(--text-main); }
+
+        /* MBTI Badge */
+        .mbti-badge-container { margin-top: auto; padding-bottom: 30px; display: flex; justify-content: flex-start; padding-left: 35px; }
+        .mbti-badge { width: 50px; height: 50px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--theme-color); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; position: relative; margin-top: 10px; }
+        .mbti-badge:hover { transform: scale(1.1); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .mbti-badge::after { content: "我的性格"; position: absolute; top: -22px; font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+
+        /* ==================== 3. 基础组件 ==================== */
+        .form-card { background: var(--card-bg); padding: 30px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm); max-width: 800px; }
+        .compact-row { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; }
+        label { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px; }
+        input, select { padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; width: 100%; background: var(--card-bg); color: var(--text-main); }
+        
+        .btn { padding: 8px 20px; background: var(--text-main); color: #fff; border: none; border-radius: 18px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-primary { background: var(--theme-color); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-danger { background: #fff0f0; color: #ff3b30; border: 1px solid transparent; }
+        .btn-danger:hover { background: #ffe5e5; }
+        .btn-secondary { background: var(--border); color: var(--text-main); }
+
+        .prio-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+        .prio-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-secondary); background: transparent; }
+        .prio-btn:hover { opacity: 0.8; }
+        .prio-btn.active { color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: translateY(-1px); }
+
+        .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .theme-card { background: var(--card-bg); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: 0.2s; box-shadow: var(--shadow-sm); }
+        .theme-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+        .theme-card.active { border-color: var(--theme-color); }
+        .theme-preview { height: 120px; position: relative; }
+        .theme-info { padding: 15px; }
+        .theme-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: var(--text-main); }
+        .theme-desc { font-size: 12px; color: var(--text-secondary); }
+
+        /* Switch */
+        .switch-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .switch-input { display: none; }
+        .switch-track { width: 44px; height: 24px; background: var(--border); border-radius: 12px; position: relative; transition: 0.3s; }
+        .switch-handle { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .switch-input:checked + .switch-track { background: var(--theme-color); }
+        .switch-input:checked + .switch-track .switch-handle { transform: translateX(20px); }
+        .reminder-options { margin-top: 15px; padding: 15px; background: var(--bg-color); border-radius: 8px; display: none; border: 1px solid var(--border); animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==================== 4. 计划执行 & 日历优化 (布局调整版) ==================== */
+        
+        /* 1. 日历布局容器 (Row) */
+        .calendar-layout-row {
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .calendar-wrapper {
+            flex: 1; /* 占据剩余空间 */
+            min-width: 0;
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            padding: 30px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .calendar-week-row {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px;
+            text-align: center; margin-bottom: 15px;
+        }
+        .cal-week-head {
+            font-size: 12px; color: var(--text-secondary);
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .calendar-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px;
+        }
+        
+        .cal-day {
+            height: 100px;
+            border-radius: 16px;
+            display: flex; flex-direction: column;
+            padding: 8px;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+            background: var(--bg-color);
+            border: 2px solid transparent;
+            color: var(--text-main);
+            transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+            justify-content: space-between;
+        }
+        
+        .cal-day:hover {
+            transform: translateY(-4px);
+            background: var(--card-bg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+            z-index: 2;
+        }
+
+        .cal-day.active {
+            border-color: var(--theme-color) !important;
+            box-shadow: 0 0 0 4px var(--theme-light);
+            background: var(--card-bg);
+        }
+        
+        .cal-date-num {
+            font-weight: 700;
+            font-size: 18px;
+            margin: 4px 0 0 4px;
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: 0.2s;
+            z-index: 5;
+            color: var(--text-main);
+        }
+        
+        .cal-day.today .cal-date-num {
+            background: var(--theme-color);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+
+        .cal-day.active .cal-date-num { color: var(--theme-color); }
+        .cal-day.active.today .cal-date-num { color: #fff; }
+
+        .cal-day-content { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 0 4px; }
+        .cal-day-prog-track { width: 100%; height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; }
+        .cal-day-prog-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .cal-day-pct { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-align: right; margin-right: 2px; font-family: var(--font-head); }
+        .cal-day.active .cal-day-pct { color: var(--theme-color); }
+        
+        /* New: Calendar Dots */
+        .cal-dots-row { display: flex; gap: 3px; justify-content: flex-end; margin-top: 5px; flex-wrap: wrap; }
+        .cal-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+        .sort-bar { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .sort-label { font-size: 12px; color: var(--text-secondary); }
+        .sort-btn { padding: 4px 12px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border); font-size: 11px; cursor: pointer; color: var(--text-main); transition: 0.2s; }
+        .sort-btn.active { background: var(--theme-color); color: #fff; border-color: transparent; }
+
+        /* ------------------ 执行页面布局 (V3) ------------------ */
+        .execution-container { display: flex; flex-direction: column; }
+        
+        .mood-engine-column-right {
+            flex: 0 0 320px; /* 固定宽度 */
+            min-width: 300px;
+        }
+
+        .task-list-column { width: 100%; margin-bottom: 25px; }
+
+        .day-gantt-column {
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            border: 1px solid var(--border);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .task-list { display: flex; flex-direction: column; padding-bottom: 10px; }
+        
+        .add-btn-container {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            cursor: pointer; padding: 10px; border-radius: 8px; transition: 0.2s;
+        }
+        .add-btn-container:hover .timeline-add-circle {
+            background: var(--theme-color); color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .add-btn-container:hover .timeline-add-text {
+            color: var(--theme-color);
+        }
+        
+        .timeline-add-circle {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--theme-color);
+            color: var(--theme-color);
+            display: flex; align-items: center; justify-content: center;
+            background: var(--card-bg); z-index: 5;
+            font-weight: 800; font-size: 16px;
+            transition: 0.2s;
+            position: relative;
+        }
+        .timeline-add-text {
+            color: var(--text-secondary);
+            font-weight: 700; font-size: 11px;
+            transition: 0.2s;
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .timeline-row { display: flex; gap: 20px; position: relative; margin-bottom: 20px; }
+        .timeline-time-col { width: 70px; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; padding-top: 22px; flex-shrink: 0; text-align: right; z-index: 2; }
+        .t-start { font-family: var(--font-head); font-weight: 700; font-size: 15px; color: var(--text-main); line-height: 1.2; }
+        .t-end { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .timeline-axis-col { width: 20px; position: relative; flex-shrink: 0; }
+        .timeline-line { position: absolute; top: 0; bottom: -40px; left: 50%; transform: translateX(-50%); width: 2px; background: var(--border); z-index: 1; }
+        .timeline-row:last-child .timeline-line { bottom: 20px; }
+        
+        .timeline-dot { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--theme-color); z-index: 2; box-shadow: 0 0 0 4px var(--bg-color); }
+        .timeline-card-col { flex: 1; min-width: 0; }
+        .task-card { background: var(--card-bg); padding: 15px 20px; border-radius: 14px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; height: 80px; }
+        .task-left { display: flex; flex-direction: column; justify-content: center; gap: 6px; flex: 1; overflow: hidden; }
+        .task-title { font-size: 16px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .task-done-title { text-decoration: line-through; color: var(--text-secondary); }
+        .task-meta { font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 10px; color: var(--text-secondary); }
+        .priority-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 600; }
+        .action-badge { cursor: pointer; display: flex; align-items: center; gap: 3px; padding: 4px 10px; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; font-size: 11px; font-weight: 600; }
+        .action-badge:hover { filter: brightness(0.95); background: rgba(0,0,0,0.05); }
+        .task-right { width: 160px; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding-left: 15px; border-left: 1px solid var(--bg-color); }
+        .progress-label { font-size: 10px; color: var(--text-secondary); display:flex; justify-content:space-between; }
+        .slider-wrapper { display: flex; align-items: center; gap: 8px; width: 100%; }
+        
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: #e5e5ea; border: none; outline: none; padding: 0; cursor: grab; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.25); border: 0.5px solid rgba(0,0,0,0.04); transition: transform 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.1); cursor: grabbing; }
+
+        /* ==================== 5. 图表与复盘 ==================== */
+        .gantt-container { display: flex; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); overflow: hidden; margin-top: 15px; }
+        .gantt-left { flex: 0 0 160px; border-right: 1px solid var(--border); background: var(--card-bg); z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
+        .gantt-right { flex: 1; overflow-x: auto; background: var(--card-bg); }
+
+        .gantt-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); margin-top: 5px; }
+        canvas { display: block; }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;}
+        .summary-card { background: var(--card-bg); padding: 20px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm); }
+        
+        .review-table-wrapper { margin-top: 30px; background: var(--card-bg); border-radius: var(--radius-card); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 30px;}
+        .review-table-header { padding: 15px; background: var(--bg-color); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .review-filters { display: flex; gap: 10px; }
+        .review-filters select { padding: 6px; width: auto; font-size: 12px; border-radius: 6px; }
+        
+        .review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .review-table th { background: var(--bg-color); padding: 12px 15px; text-align: left; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .review-table td { padding: 12px 15px; border-bottom: 1px solid var(--bg-color); color: var(--text-main); }
+        .avg-badge { background: var(--bg-color); padding: 3px 8px; border-radius: 10px; font-weight: 600; font-size: 12px; }
+        
+        .table-prog-bar { height: 6px; width: 100px; background: #e5e5ea; border-radius: 3px; overflow: hidden; position: relative; }
+        .table-prog-fill { height: 100%; transition: width 0.3s; border-radius: 3px; }
+
+        .prio-chart-container { display: flex; align-items: flex-end; justify-content: space-around; height: 250px; padding: 30px 10px 0 10px; border-bottom: 1px solid var(--border); }
+        .prio-col-group { display: flex; flex-direction: column; align-items: center; width: 12%; gap: 10px; height: 100%; justify-content: flex-end; }
+        .prio-track { width: 100%; height: 80%; background: var(--bg-color); border-radius: 4px; position: relative; display: flex; align-items: flex-end; }
+        .prio-fill { width: 100%; transition: height 1s cubic-bezier(0.2, 0.8, 0.2, 1); border-radius: 4px; min-height: 0px; }
+        .prio-val { font-size: 13px; font-weight: 700; color: var(--text-main); }
+        .prio-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; margin-top: 5px;}
+        
+        /* Modified Word Cloud Container */
+        .word-cloud-container { position: relative; height: 280px; width: 100%; overflow: hidden; padding: 0; background: var(--card-bg); }
+        .word-tag { position: absolute; white-space: nowrap; transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); cursor: pointer; font-family: var(--font-head); font-weight: 700; line-height: 1; text-align: center; }
+        .word-tag:hover { z-index: 100; transform: scale(1.2) !important; text-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+
+        #quadrantTooltip { position: absolute; pointer-events: none; background: rgba(0, 0, 0, 0.8); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); white-space: nowrap; }
+
+        /* 日历组件 */
+        .date-picker-wrapper { border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 20px; background: var(--bg-color); display: none; }
+        .picker-controls { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+        .mode-switch { display: flex; background: var(--border); border-radius: 6px; padding: 2px; }
+        .mode-btn { padding: 4px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; color: var(--text-secondary); }
+        .mode-btn.active { background: var(--card-bg); color: var(--text-main); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .picker-header { display: flex; justify-content: center; gap: 20px; align-items: center; margin-bottom: 10px; font-weight: 600; }
+        .picker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .picker-day-head { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600;}
+        .picker-day { height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 14px; background: var(--card-bg); transition: 0.2s; color: var(--text-main); }
+        .picker-day.selected { background: var(--theme-color); color: #fff; font-weight: 600; }
+        .picker-day.empty { background: transparent; cursor: default; }
+        
+        .cat-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--card-bg); border-radius: 20px; margin: 5px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); color: var(--text-main); transition: 0.2s; }
+        .cat-chip:hover { border-color: var(--theme-color); }
+        .color-picker-input { width: 16px; height: 16px; padding: 0; border: none; border-radius: 50%; cursor: pointer; background: none; -webkit-appearance: none; overflow: hidden; }
+        .color-picker-input::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+        /* Chart Header with Tooltip */
+        .chart-header { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
+        .chart-header h3 { margin: 0; font-size: 16px; font-family: var(--font-head); font-weight: 700; color: var(--text-main); }
+        .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--text-secondary); color: var(--text-secondary); font-size: 11px; font-weight:bold; cursor: help; position: relative; flex-shrink: 0; transition: 0.2s; }
+        .info-icon:hover { color: var(--theme-color); border-color: var(--theme-color); background: var(--theme-light); }
+        
+        .info-tooltip {
+            visibility: hidden; position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%);
+            width: 280px; background: rgba(0,0,0,0.9); color: #fff; padding: 12px;
+            border-radius: 10px; font-size: 12px; line-height: 1.6; font-weight: 400; text-align: left;
+            opacity: 0; transition: 0.2s; pointer-events: none; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .info-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(0,0,0,0.9) transparent transparent transparent; }
+        .info-icon:hover .info-tooltip { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-5px); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-box { background: var(--card-bg); padding: 25px; border-radius: 16px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+
+        /* ==================== 6. 新增：我的计划 (My Work) 样式 ==================== */
+        .my-plans-container { display: flex; flex-direction: column; gap: 20px; }
+        .my-plans-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
+        
+        .view-select { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; background: var(--card-bg); color: var(--text-main); font-weight: 600; cursor: pointer; width: auto; min-width: unset; }
+        .view-select:hover { border-color: var(--theme-color); }
+
+        .date-range-group { display: flex; align-items: center; gap: 5px; background: var(--card-bg); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border); }
+        .date-range-group input[type="date"] { border: none; background: transparent; padding: 4px; font-size: 13px; width: auto; color: var(--text-secondary); cursor: pointer; }
+        .date-range-group input[type="date"]:hover { color: var(--text-main); }
+
+        .search-bar { position: relative; flex: 1; max-width: 300px; margin-left: auto; }
+        .search-bar input { padding-left: 36px; border-radius: 8px; height: 36px; border: 1px solid var(--border); transition: 0.2s; width: 100%; }
+        .search-bar input:focus { border-color: var(--theme-color); box-shadow: 0 0 0 3px var(--theme-focus); }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px; }
+        
+        .bulk-actions { display: none; align-items: center; gap: 10px; animation: fadeIn 0.2s; margin-left: 10px; }
+        .bulk-actions.show { display: flex; }
+        
+        .plan-group { margin-bottom: 20px; }
+        .group-header { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 0; font-weight: 600; color: var(--text-main); font-size: 16px; transition: 0.2s; user-select: none; }
+        .group-header:hover { opacity: 0.8; }
+        .arrow-icon { width: 8px; height: 8px; border-right: 2px solid var(--text-main); border-bottom: 2px solid var(--text-main); transform: rotate(45deg); transition: transform 0.2s; margin-right: 5px; }
+        
+        /* Default Collapsed State */
+        .plan-group.collapsed .arrow-icon { transform: rotate(-45deg); }
+        .plan-group.collapsed .group-content { display: none; }
+        
+        .group-name { display: flex; align-items: center; gap: 8px; }
+        .group-count { font-size: 12px; color: var(--text-secondary); font-weight: normal; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 10px; }
+
+        .plan-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-sm); table-layout: fixed; }
+        .plan-table th, .plan-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .plan-table th { background: var(--bg-color); color: var(--text-secondary); font-size: 12px; font-weight: 600; }
+        .plan-table tr:last-child td { border-bottom: none; }
+        .plan-table tr:hover { background-color: var(--bg-color); }
+        
+        /* 列宽控制 */
+        .col-check { width: 40px; text-align: center !important; display: none; }
+        .my-plans-container.bulk-mode .col-check { display: table-cell; } /* Only show when bulk mode is active */
+
+        .col-date { width: 130px; }
+        .col-time { width: 100px; }
+        .col-title { width: auto; }
+        .col-prio { width: 110px; }
+        .col-prog { width: 120px; }
+        .col-cat { width: 120px; }
+
+        /* 表格内输入框样式 */
+        .table-input { border: 1px solid transparent; background: transparent; width: 100%; padding: 4px; border-radius: 4px; font-size: 13px; color: var(--text-main); transition: 0.2s; }
+        .table-input:hover, .table-input:focus { background: var(--card-bg); border-color: var(--border); }
+        .table-input:focus { border-color: var(--theme-color); }
+        
+        .prog-cell { display: flex; align-items: center; gap: 8px; }
+        .table-prog-track { flex: 1; height: 6px; background: #e5e5ea; border-radius: 3px; overflow: hidden; }
+        .table-prog-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; background: var(--theme-color); }
+        
+        /* 状态颜色点 */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ==================== 7. 今日罗素情绪环 (Mood Engine) ==================== */
+        .mood-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .mood-pad {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: var(--bg-color);
+            border-radius: 16px;
+            margin: 20px 0;
+            position: relative;
+            cursor: crosshair;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        /* 坐标轴标签 */
+        .axis-label {
+            position: absolute;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            pointer-events: none;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .axis-label.top { top: 10px; left: 50%; transform: translateX(-50%); }
+        .axis-label.bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .axis-label.left { left: -10px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+        .axis-label.right { right: -10px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+
+        /* 弥散光感引擎 */
+        .mood-gradient-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at var(--mood-x, 50%) var(--mood-y, 50%), var(--theme-color), transparent 60%);
+            opacity: 0.5;
+            filter: blur(25px);
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        /* 游标 */
+        .mood-cursor {
+            position: absolute;
+            width: 14px; height: 14px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transform: translate(-50%, -50%);
+            left: 50%; top: 50%;
+            pointer-events: none;
+            transition: left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+        }
+
+        .mood-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-main);
+            background: var(--bg-color);
+            transition: 0.2s;
+        }
+        .mood-input:focus { border-color: var(--theme-color); box-shadow: 0 0 0 3px var(--theme-focus); }
+
+        /* ==================== 8. 情绪跟踪报表样式 ==================== */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: var(--bg-color);
+            position: relative;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+        .heatmap-cell.has-data {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* ==================== 9. 响应式适配 (Mobile & Responsive) ==================== */
+        @media (max-width: 900px) {
+            /* 1. 侧边栏改为点击后滑出，且为覆盖层 (Fixed) */
+            .app-container { display: block; }
+            .sidebar {
+                position: fixed; top: 0; left: 0; bottom: 0; height: 100%;
+                width: 260px;
+                transform: translateX(0);
+                margin-left: 0;
+                box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+                transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            }
+            /* 默认隐藏侧边栏，或通过 JS 控制类名 */
+            .sidebar.closed { transform: translateX(-100%); margin-left: 0; opacity: 1; }
+            
+            /* 2. 主内容区域占满宽度 */
+            .main-content {
+                width: 100%;
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 70px; /* 留出顶部汉堡按钮空间 */
+            }
+
+            /* 3. 页面内布局调整为单栏 */
+            .calendar-layout-row { flex-direction: column; }
+            .mood-engine-column-right { width: 100%; margin-top: 20px; flex: none; }
+            
+            .compact-row { flex-direction: column; gap: 15px; }
+            .timeline-row { gap: 10px; }
+            .timeline-time-col { width: 50px; text-align: right; padding-right: 5px;}
+            .task-card { height: auto; flex-direction: column; align-items: stretch; gap: 10px; padding: 15px; }
+            .task-right { width: 100%; border-left: none; border-top: 1px solid var(--bg-color); padding-left: 0; padding-top: 10px; }
+            
+            .chart-grid { grid-template-columns: 1fr; }
+            
+            /* 4. 我的计划 My Plans 移动端适配 */
+            .my-plans-toolbar { flex-direction: column; align-items: stretch; }
+            .search-bar { max-width: 100%; margin-left: 0; }
+            .plan-table { display: block; overflow-x: auto; }
+            .col-date, .col-time, .col-prio, .col-cat { min-width: 100px; }
+            .col-title { min-width: 150px; }
+            
+            /* 5. 日历格子字体调小 */
+            .cal-day { height: 80px; }
+            .cal-date-num { width: 24px; height: 24px; font-size: 14px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('closed')">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+
+    <div class="app-container">
+        <aside class="sidebar closed" id="sidebar"> <!-- 默认手机端隐藏，PC端通过JS判断视口 -->
+            <div class="logo">Daily Sense.</div>
+            <div class="nav-item active" onclick="switchView('add')">
+                <span style="font-size: 16px;">➕</span> 添加计划
+            </div>
+            <div class="nav-item" onclick="switchView('calendar')">计划执行</div>
+            <div class="nav-item" onclick="switchView('myplans')">我的计划</div>
+            
+            <div class="nav-item" onclick="switchView('summary')">计划复盘及总结</div>
+            <div class="nav-item" onclick="switchView('moodreport')">情绪跟踪报表</div>
+            <div class="nav-item" onclick="switchView('category')">自定义</div>
+            <div class="nav-item" onclick="switchView('mbti')">
+                 我的MBTI性格
+            </div>
+            
+            <div class="mbti-badge-container">
+                <div class="mbti-badge" id="mbtiBadge" onclick="switchView('mbti')">
+                    ?
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <!-- 1. 添加计划 -->
+            <div id="view-add" class="view-section active-view">
+                <h1 class="page-header">添加计划</h1>
+                <div class="form-card">
+                    <div class="compact-row">
+                        <div style="flex: 2;">
+                            <label>计划名称</label>
+                            <input type="text" id="inputTitle" placeholder="请输入计划内容">
+                        </div>
+                        <div style="flex: 1;">
+                            <label>所属项目</label>
+                            <select id="inputCategory"></select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label>优先级 (Theme Based)</label>
+                        <div class="prio-selector" id="prioSelector"></div>
+                        <input type="hidden" id="inputPriority" value="medium">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="margin-bottom:10px;">提醒设置</label>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <label class="switch-container">
+                                <input type="checkbox" class="switch-input" id="reminderToggle" onchange="toggleReminderOptions()">
+                                <div class="switch-track"><div class="switch-handle"></div></div>
+                                <span style="font-size:14px; color:var(--text-main);">是否需要提醒</span>
+                            </label>
+                            
+                            <div id="reminderOptions" class="reminder-options">
+                                <label>选择提醒时间：</label>
+                                <select id="reminderOffsetSelect">
+                                    <option value="5">提前 5 分钟</option>
+                                    <option value="30">提前 30 分钟</option>
+                                    <option value="60">提前 1 小时</option>
+                                    <option value="1440">提前 1 天</option>
+                                </select>
+                                <div style="margin-top:8px; font-size:11px; color:var(--text-secondary);">* 需允许浏览器发送通知权限，且保持网页开启。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label>日期规划</label>
+                        <button type="button" class="btn btn-outline" style="width:100%; text-align:left; padding:12px;" onclick="toggleDatePicker()">
+                            点击选择日期... <span id="dateSummary" style="float:right; color:var(--theme-color);"></span>
+                        </button>
+                    </div>
+
+                    <div id="datePickerWrapper" class="date-picker-wrapper">
+                        <div class="picker-controls">
+                            <div class="mode-switch">
+                                <div class="mode-btn active" id="modeSingle" onclick="setPickerMode('single')">单点多选</div>
+                                <div class="mode-btn" id="modeRange" onclick="setPickerMode('range')">范围连选</div>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-secondary);">已选 <span id="selectedCount" style="color:var(--theme-color); font-weight:bold;">0</span> 天</div>
+                        </div>
+                        <div class="picker-header">
+                            <span style="cursor:pointer;" onclick="pickerChangeMonth(-1)">◀</span>
+                            <span id="pickerMonthStr"></span>
+                            <span style="cursor:pointer;" onclick="pickerChangeMonth(1)">▶</span>
+                        </div>
+                        <div class="picker-grid" id="pickerGrid"></div>
+                    </div>
+
+                    <div style="display:flex; gap:20px; margin-bottom:30px;">
+                        <div style="flex:1">
+                            <label>开始时间</label>
+                            <input type="time" id="inputStartTime" value="09:00">
+                        </div>
+                        <div style="flex:1">
+                            <label>结束时间</label>
+                            <input type="time" id="inputEndTime" value="10:00">
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn btn-primary" onclick="addNewTask()">确认添加</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 计划执行 -->
+            <div id="view-calendar" class="view-section">
+                <h1 class="page-header">计划执行</h1>
+                
+                <!-- 上部容器：左侧日历，右侧情绪环 -->
+                <div class="calendar-layout-row">
+                    <!-- 左侧：日历主体 -->
+                    <div class="calendar-wrapper">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                            <button class="btn btn-outline" style="border:none; font-size:18px;" onclick="calChangeMonth(-1)">◀</button>
+                            <h2 style="font-size:20px; font-weight:800; color:var(--text-main);" id="calMonthStr"></h2>
+                            <button class="btn btn-outline" style="border:none; font-size:18px;" onclick="calChangeMonth(1)">▶</button>
+                        </div>
+                        <div id="calHeaderRow" class="calendar-week-row"></div>
+                        <div class="calendar-grid" id="mainCalGrid"></div>
+                    </div>
+
+                    <!-- 右侧：仪表盘在上方，情绪环在下方 -->
+                    <div class="mood-engine-column-right">
+                        
+                        <!-- 1. 今日计划完成率仪表盘 (移至顶部) -->
+                        <div class="mood-card">
+                            <div class="chart-header" style="justify-content:center; margin-bottom:5px;">
+                                <h3>今日计划完成率</h3>
+                            </div>
+                            <div style="height:140px; position:relative; display:flex; justify-content:center; align-items:center;">
+                                <canvas id="todayGaugeCanvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 2. 今日罗素情绪环 (移至底部) -->
+                        <div class="mood-card" style="margin-top: 20px;">
+                            <h3 style="font-family:var(--font-head); font-weight:700; font-size:16px; margin-bottom:5px;">今日罗素情绪环</h3>
+                            <div style="font-size:11px; color:var(--text-secondary);">点击光斑定位你的能量与心情</div>
+                            
+                            <div class="mood-pad" id="moodPad" onclick="handleMoodClick(event)">
+                                <div class="axis-label top">High Energy<br>高能量</div>
+                                <div class="axis-label bottom">Low Energy<br>低能量</div>
+                                <div class="axis-label left">Unpleasant<br>不悦</div>
+                                <div class="axis-label right">Pleasant<br>愉悦</div>
+                                
+                                <div class="mood-gradient-overlay" id="moodGradient"></div>
+                                <div class="mood-cursor" id="moodCursor"></div>
+                            </div>
+                            
+                            <input type="text" class="mood-input" id="moodWord" placeholder="请用一个词描述心情" onchange="saveMoodData()">
+                        </div>
+
+                    </div>
+                </div>
+                
+                <!-- 下部容器：执行列表与甘特图 -->
+                <div style="margin-top:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 id="selectedDateStr" style="font-size:18px; margin:0; color:var(--text-secondary);">请选择日期</h3>
+                        <div class="sort-bar" id="sortControl" style="margin:0;">
+                            <span class="sort-label">排序方式:</span>
+                            <div class="sort-btn active" onclick="changeSort('time', this)">时间</div>
+                            <div class="sort-btn" onclick="changeSort('priority', this)">优先级</div>
+                            <div class="sort-btn" onclick="changeSort('progress', this)">进度</div>
+                        </div>
+                    </div>
+                    
+                    <div class="execution-container">
+                        
+                        <!-- 1. 计划列表 (Task List) -->
+                        <div class="task-list-column">
+                            <div id="calendarTaskList" class="task-list"></div>
+                        </div>
+
+                        <!-- 2. 当日时间轴 (Day Gantt) -->
+                        <div class="day-gantt-column">
+                            <h4 style="margin-bottom:15px; font-size:14px; color:var(--text-secondary);">当日时间轴 (Day Gantt)</h4>
+                            <div class="gantt-scroll">
+                                <canvas id="dayGanttCanvas"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 新增：我的计划 (My Work) 视图 -->
+            <div id="view-myplans" class="view-section">
+                <h1 class="page-header">我的计划</h1>
+                
+                <div class="my-plans-toolbar">
+                    <!-- 年/日期统计区间 -->
+                    <div class="date-range-group">
+                        <input type="date" id="myPlanStart" onchange="renderMyPlans()">
+                        <span style="color:var(--text-secondary)">-</span>
+                        <input type="date" id="myPlanEnd" onchange="renderMyPlans()">
+                    </div>
+
+                    <!-- 视图切换下拉 -->
+                    <select id="myPlansViewMode" onchange="renderMyPlans()" class="view-select">
+                        <option value="date">日期视图</option>
+                        <option value="priority">优先级视图</option>
+                        <option value="status">状态视图</option>
+                    </select>
+
+                    <div class="search-bar">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="myPlansSearch" placeholder="搜索计划..." oninput="renderMyPlans()">
+                    </div>
+
+                    <!-- 批量删除按钮 -->
+                    <button class="btn btn-outline" id="btnToggleBulk" onclick="toggleBulkMode()" style="padding:6px 12px; font-size:13px;">批量删除</button>
+
+                    <div class="bulk-actions" id="bulkActionsBar">
+                        <span style="font-size:13px; color:var(--text-secondary);">已选 <span id="selectedPlanCount">0</span> 项</span>
+                        <button class="btn btn-danger" style="padding:6px 15px;" onclick="deleteSelectedPlans()">确认删除</button>
+                    </div>
+                </div>
+
+                <div class="my-plans-container" id="myPlansContent"></div>
+            </div>
+
+            <!-- 3. 计划复盘及总结 (原总结及复盘) -->
+            <div id="view-summary" class="view-section">
+                <h1 class="page-header">计划复盘及总结</h1>
+                
+                <div class="form-card" style="padding:15px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                    <label>统计区间 (默认为本月)：</label>
+                    <input type="date" id="sumStart" style="width:auto; margin:0;"> 至 <input type="date" id="sumEnd" style="width:auto; margin:0;">
+                    <button class="btn btn-primary" onclick="renderSummary()" style="margin-left:auto;">分析数据</button>
+                </div>
+
+                <div class="chart-grid" style="margin-bottom:20px;">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>总体完成率</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：基于总计划数的完成百分比。<br>用法：快速评估整体执行力。<br>好处：直观了解当前阶段的达标情况。</div></div>
+                        </div>
+                        <div style="height:200px; position:relative; display:flex; justify-content:center; align-items:center;" id="gaugeChartContainer"><canvas id="gaugeCanvas"></canvas></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>效率趋势图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：展示每日平均完成率的线性变化。<br>用法：观察执行状态的起伏。<br>好处：识别倦怠期或高效期，及时调整。</div></div>
+                        </div>
+                        <div style="height:200px; position:relative; display:flex; align-items:flex-end;" id="trendChart"><canvas id="trendCanvas" style="width:100%; height:100%;"></canvas></div>
+                    </div>
+                </div>
+                
+                <div class="chart-grid" style="margin-bottom:20px;">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>个人效能五维分析</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：从完成率、勤奋度、重要性、专注度、平衡性五个维度评分。<br>用法：寻找自身短板。<br>好处：全面提升个人综合效能，不偏科。</div></div>
+                        </div>
+                        <div style="height:250px; display:flex; justify-content:center; align-items:center;"><canvas id="radarChartCanvas" width="250" height="250"></canvas></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>任务分布四象限 (Eisenhower)</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：根据重要性和紧急程度将任务分类。<br>用法：优先处理第一象限，规划第二象限。<br>好处：科学分配精力，避免被琐事缠身。</div></div>
+                        </div>
+                        <div style="height:250px; position:relative; border:1px solid #eee; border-radius:8px; overflow:hidden;" id="eisenhowerContainer">
+                            <div style="position:absolute; top:0; left:50%; width:50%; height:50%; background:#fff5f5; border-left:1px dashed #ddd; border-bottom:1px dashed #ddd;"></div>
+                            <div style="position:absolute; top:0; left:0; width:50%; height:50%; background:#f0f9ff; border-bottom:1px dashed #ddd;"></div>
+                            <div style="position:absolute; top:50%; left:50%; width:50%; height:50%; background:#fff; border-left:1px dashed #ddd;"></div>
+                            <div style="position:absolute; top:50%; left:0; width:50%; height:50%; background:#f9f9f9;"></div>
+                            <div style="position:absolute; top:5px; right:5px; font-size:10px; color:#ff3b30; font-weight:bold;">重要且紧急</div>
+                            <div style="position:absolute; top:5px; left:5px; font-size:10px; color:#0071e3; font-weight:bold;">不重要紧急</div>
+                            <div style="position:absolute; bottom:5px; right:5px; font-size:10px; color:#ff9f0a; font-weight:bold;">重要不紧急</div>
+                            <div style="position:absolute; bottom:5px; left:5px; font-size:10px; color:#86868b; font-weight:bold;">不重要不紧急</div>
+                            <canvas id="eisenhowerCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+                            <div id="quadrantTooltip"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-card" style="margin-bottom:20px;">
+                    <div class="chart-header">
+                        <h3>计划高频词云</h3>
+                        <div class="info-icon">i<div class="info-tooltip">原理：提取计划标题中的高频词汇。<br>用法：查看最近的关注焦点。<br>好处：了解自己在哪方面投入精力最多。</div></div>
+                    </div>
+                    <div id="wordCloudContainer" class="word-cloud-container"></div>
+                </div>
+                <div class="summary-card" style="margin-bottom:20px;">
+                    <div class="chart-header">
+                        <h3>日程进度图 (Split Gantt)</h3>
+                        <div class="info-icon">i<div class="info-tooltip">原理：按时间线展示任务的持续时间和进度。<br>用法：回顾任务的时间跨度和执行连贯性。<br>好处：优化时间排期，发现时间冲突。</div></div>
+                    </div>
+                    <div class="gantt-container" id="ganttContainer">
+                        <div class="gantt-left"><canvas id="ganttLeftCanvas"></canvas></div>
+                        <div class="gantt-right"><canvas id="ganttRightCanvas"></canvas></div>
+                    </div>
+                </div>
+                <div class="chart-grid">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>分类执行对比</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：对比不同项目的完成情况。<br>用法：分析哪类任务容易完成，哪类容易拖延。<br>好处：针对性改进特定领域的执行力。</div></div>
+                        </div>
+                        <div id="catComparisonChart" style="height:200px; display:flex; align-items:flex-end; justify-content:space-around; padding-top:20px;"></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>执行优先级完成率</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：统计不同优先级的平均进度。<br>用法：检查是否做到了“要事优先”。<br>好处：确保高优先级任务得到足够重视。</div></div>
+                        </div>
+                        <div class="prio-chart-container" id="prioChartArea"></div>
+                    </div>
+                </div>
+                <div class="chart-grid" style="margin-top:20px;">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>时间分布 (饼图)</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：按分类统计总耗时占比。<br>用法：了解时间都去哪了。<br>好处：调整时间投入结构，平衡工作与生活。</div></div>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:center; height:250px; margin-top:10px; gap:20px;">
+                            <div id="pieChart" style="width:160px; height:160px; border-radius:50%; background:#eee;"></div>
+                            <div id="pieLegend" style="font-size:12px; display:flex; flex-direction:column; gap:5px;"></div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>专注时段分布 (柱状)</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：统计一天中任务发生的频次分布。<br>用法：找到自己的高效黄金时间。<br>好处：在黄金时间安排最难的任务。</div></div>
+                        </div>
+                        <div style="height:250px; display:flex; align-items:flex-end; gap:2px; justify-content:space-between; padding-top:20px;" id="hoursChart"></div>
+                    </div>
+                </div>
+                <div class="chart-grid" style="margin-top:20px;">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>周活跃度</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：统计一周七天每天的任务数量。<br>用法：分析一周的工作节奏。<br>好处：合理分配一周工作量，避免劳累不均。</div></div>
+                        </div>
+                        <div style="height:250px; display:flex; align-items:flex-end; gap:10px; justify-content:space-around; padding-top:20px;" id="weeklyChart"></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>时长分布</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：按任务时长分类（短/中/长）。<br>用法：评估任务的颗粒度。<br>好处：帮助拆解任务，避免任务过大难以开始。</div></div>
+                        </div>
+                        <div style="display:flex; align-items:center; justify-content:center; height:250px; gap:20px;">
+                            <div id="durationPie" style="width:140px; height:140px; border-radius:50%; background:#eee;"></div>
+                            <div id="durationLegend" style="font-size:12px; display:flex; flex-direction:column; gap:5px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-table-wrapper">
+                    <div class="review-table-header">
+                        <span>项目明细复盘</span>
+                        <div class="review-filters">
+                            <select id="reviewStatusFilter" onchange="filterReviewTable()"><option value="all">所有状态</option><option value="completed">已完成</option><option value="incomplete">未完成</option></select>
+                            <select id="reviewCatFilter" onchange="filterReviewTable()"></select>
+                            <select id="reviewPrioFilter" onchange="filterReviewTable()"><option value="all">所有优先级</option></select>
+                        </div>
+                    </div>
+                    <table class="review-table"><thead><tr><th>项目分类</th><th>计划名称</th><th>执行次数</th><th>完成情况 (进度条)</th><th>平均进度</th></tr></thead><tbody id="reviewTableBody"></tbody></table>
+                </div>
+            </div>
+
+            <!-- 新增：情绪跟踪报表 -->
+            <div id="view-moodreport" class="view-section">
+                <h1 class="page-header">情绪跟踪报表</h1>
+                
+                <div class="form-card" style="padding:15px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                    <label>统计区间 (默认为本月)：</label>
+                    <input type="date" id="moodReportStart" style="width:auto; margin:0;"> 至 <input type="date" id="moodReportEnd" style="width:auto; margin:0;">
+                    <button class="btn btn-primary" onclick="renderMoodReport()" style="margin-left:auto;">生成报表</button>
+                </div>
+
+                <div class="chart-grid" style="margin-bottom:20px;">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>能量值日历热力图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：将每日能量值可视化为颜色深浅。<br>用法：概览本月的精力充沛程度。<br>好处：识别精力周期，合理安排休息。</div></div>
+                        </div>
+                        <div id="energyHeatmap" class="heatmap-grid"></div>
+                        <div style="font-size:10px; color:#999; margin-top:5px; text-align:right;">Low Energy → High Energy</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>心情值日历热力图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：将每日愉悦度可视化为颜色深浅。<br>用法：概览本月的心情好坏分布。<br>好处：关注心理健康，及时排解负面情绪。</div></div>
+                        </div>
+                        <div id="pleasantHeatmap" class="heatmap-grid"></div>
+                        <div style="font-size:10px; color:#999; margin-top:5px; text-align:right;">Unpleasant → Pleasant</div>
+                    </div>
+                </div>
+
+                <div class="summary-card" style="margin-bottom:20px;">
+                    <div class="chart-header">
+                        <h3>情绪词云</h3>
+                        <div class="info-icon">i<div class="info-tooltip">原理：统计记录的高频情绪词汇。<br>用法：了解自己最常处于哪种情绪状态。<br>好处：增强自我觉察，发现潜意识的情绪模式。</div></div>
+                    </div>
+                    <div id="moodWordCloudContainer" class="word-cloud-container"></div>
+                </div>
+
+                <div class="chart-grid">
+                    <!-- 高级图表 1: 罗素情绪分布散点图 -->
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>罗素情绪分布散点图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：以坐标点形式展示情绪分布。<br>用法：看落点主要集中在哪个象限。<br>好处：宏观判断近期情绪基调（如焦虑、平静、抑郁或兴奋）。</div></div>
+                        </div>
+                        <div style="height:250px; position:relative; border:1px solid #eee; border-radius:8px; display:flex; justify-content:center; align-items:center;">
+                            <canvas id="moodScatterCanvas" width="300" height="250"></canvas>
+                        </div>
+                    </div>
+                    <!-- 高级图表 2: 情绪双波段趋势 -->
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>情绪双波段趋势图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：双线展示能量与心情的波动。<br>用法：对比两者的同步或背离情况。<br>好处：发现是什么事件导致了情绪或能量的剧烈波动。</div></div>
+                        </div>
+                        <div style="height:250px; position:relative; display:flex; align-items:flex-end;">
+                            <canvas id="moodTrendCanvas" style="width:100%; height:100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 拆分后的雷达图 -->
+                <div class="chart-grid" style="margin-top:20px;">
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>平均能量雷达图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：统计一周七天每天的平均能量值。<br>用法：找出哪天精力最旺盛。<br>好处：在精力最好的那天安排最困难的工作。</div></div>
+                        </div>
+                        <div style="height:300px; display:flex; justify-content:center; align-items:center;">
+                            <canvas id="moodWeeklyEnergyCanvas" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="chart-header">
+                            <h3>平均愉悦雷达图</h3>
+                            <div class="info-icon">i<div class="info-tooltip">原理：统计一周七天每天的平均心情值。<br>用法：找出哪天心情最愉悦。<br>好处：在心情低落的日子安排轻松的任务或休息。</div></div>
+                        </div>
+                        <div style="height:300px; display:flex; justify-content:center; align-items:center;">
+                            <canvas id="moodWeeklyPleasantCanvas" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 4. 项目定义 -->
+            <div id="view-category" class="view-section">
+                <!-- ... 内容保持不变 ... -->
+                <h1 class="page-header">自定义</h1>
+                <h3 style="margin:20px 0 10px 0;">项目分类定义</h3>
+                <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
+                    <input type="text" id="newCatInput" placeholder="新项目名称" style="max-width:200px; margin:0;">
+                    <button class="btn btn-primary" onclick="addCategory()">添加</button>
+                    <span style="font-size:12px; color:var(--text-secondary);">* 主题切换时会自动匹配配色，您也可以点击圆点手动修改。</span>
+                </div>
+                <div id="catContainer" style="display:flex; flex-wrap:wrap; margin-bottom: 40px;"></div>
+                <hr style="border:0; border-top:1px solid var(--border); margin: 30px 0;">
+                <h3 style="margin:20px 0 10px 0;">全局主题切换</h3>
+                <div class="theme-grid">
+                    <div class="theme-card active" onclick="setTheme('default')" id="theme-default">
+                        <div class="theme-preview" style="background:#f5f5f7; display:flex; justify-content:center; align-items:center;">
+                            <div style="width:80%; height:60px; background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.1); display:flex; align-items:center; padding:10px; gap:10px;">
+                                <div style="width:20px; height:20px; background:#0071e3; border-radius:6px;"></div>
+                                <div style="height:8px; width:60%; background:#e5e5ea; border-radius:4px;"></div>
+                            </div>
+                        </div>
+                        <div class="theme-info"><div class="theme-name">Modern Blue (默认)</div><div class="theme-desc">清爽、现代、科技感。</div></div>
+                    </div>
+                    <!-- ... 其他主题卡片保持不变 ... -->
+                    <div class="theme-card" onclick="setTheme('warm')" id="theme-warm"><div class="theme-preview" style="background:#f3f3ef; display:flex; justify-content:center; align-items:center;"><div style="width:80%; height:60px; background:#fff; border-radius:16px; box-shadow:0 2px 5px rgba(0,0,0,0.05); display:flex; align-items:center; padding:10px; gap:10px;"><div style="width:20px; height:20px; background:#4a5d4e; border-radius:6px;"></div><div style="height:8px; width:60%; background:#e8ece9; border-radius:4px;"></div></div></div><div class="theme-info"><div class="theme-name">Warm Earth (暖色)</div><div class="theme-desc">优雅配色，橄榄绿主调。</div></div></div>
+                    <div class="theme-card" onclick="setTheme('pink')" id="theme-pink"><div class="theme-preview" style="background:#fff0f5; display:flex; justify-content:center; align-items:center;"><div style="width:80%; height:60px; background:#fff; border-radius:24px; box-shadow:0 8px 16px rgba(0,0,0,0.04); display:flex; align-items:center; padding:10px; gap:10px;"><div style="width:20px; height:20px; background:#e62e5c; border-radius:8px;"></div><div style="height:8px; width:60%; background:#f2e1e6; border-radius:4px;"></div></div></div><div class="theme-info"><div class="theme-name">Creative Pink (粉红色系)</div><div class="theme-desc">极简灰白底色，搭配亮眼玫红。</div></div></div>
+                    <div class="theme-card" onclick="setTheme('imissyou')" id="theme-imissyou"><div class="theme-preview" style="background:#f9f7f0; display:flex; justify-content:center; align-items:center;"><div style="width:80%; height:60px; background:#fff; border-radius:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:flex; align-items:center; padding:10px; gap:10px;"><div style="width:20px; height:20px; background:#7e3e4a; border-radius:6px;"></div><div style="height:8px; width:60%; background:#e8e0d5; border-radius:4px;"></div></div></div><div class="theme-info"><div class="theme-name">Vintage Memory (复古)</div><div class="theme-desc">I Miss You 配色，经典红褐调。</div></div></div>
+                    <div class="theme-card" onclick="setTheme('pop')" id="theme-pop"><div class="theme-preview" style="background:#f6f5f8; display:flex; justify-content:center; align-items:center;"><div style="width:80%; height:60px; background:#fff; border-radius:20px; box-shadow:0 6px 15px rgba(0,0,0,0.06); display:flex; align-items:center; padding:10px; gap:10px;"><div style="width:20px; height:20px; background:#2C1A32; border-radius:8px;"></div><div style="height:8px; width:60%; background:#e0dce6; border-radius:4px;"></div></div></div><div class="theme-info"><div class="theme-name">Deep Pop (深紫撞色)</div><div class="theme-desc">高对比度，鲜艳明快的视觉体验。</div></div></div>
+                </div>
+            </div>
+
+            <!-- 5. MBTI 测试 -->
+            <div id="view-mbti" class="view-section">
+                <!-- ... 内容保持不变 ... -->
+                <h1 class="page-header">我的MBTI性格</h1>
+                <div style="height:450px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:var(--card-bg); border-radius:var(--radius-card); box-shadow:var(--shadow-sm); overflow:hidden; position: relative;">
+                    <div style="width:100%; height:200px; background:url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80') no-repeat center center; background-size:cover; margin-bottom:20px; border-radius:var(--radius-card) var(--radius-card) 0 0;"></div>
+                    <div id="mbtiContentArea" style="text-align:center; padding:0 20px;">
+                        <h2 style="margin-bottom:10px;">探索你的性格类型</h2>
+                        <button class="btn btn-primary" style="padding:12px 30px; font-size:16px;" onclick="openMbtiPage()">点击测试你的MBTI</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="margin-bottom:15px; font-family:var(--font-head); font-weight:700;">修改计划</h3>
+            <input type="hidden" id="editTaskId">
+            <div style="margin-bottom:15px;">
+                <label>计划名称</label>
+                <input type="text" id="editTitle">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label>更改日期</label>
+                <input type="date" id="editDate">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label>执行优先级</label>
+                <select id="editPriority">
+                    <option value="highest">最高</option>
+                    <option value="high">偏高</option>
+                    <option value="medium">适中</option>
+                    <option value="low">偏低</option>
+                    <option value="lowest">最低</option>
+                </select>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button class="btn btn-danger" onclick="deleteTask()">删除</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+                    <button class="btn btn-primary" onclick="saveEdit()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增：快速添加计划弹窗 -->
+    <div id="quickAddModal" class="modal-overlay">
+        <div class="modal-box" style="width: 360px;">
+            <h3 style="margin-bottom:15px; font-family:var(--font-head); font-weight:700;">增加今日计划</h3>
+            <input type="hidden" id="quickAddDate">
+            
+            <div style="margin-bottom:15px;">
+                <label>计划名称</label>
+                <input type="text" id="quickAddTitle" placeholder="要做什么？">
+            </div>
+            
+            <div class="compact-row" style="margin-bottom:15px;">
+                <div style="flex:1">
+                    <label>所属项目</label>
+                    <select id="quickAddCategory"></select>
+                </div>
+                <div style="flex:1">
+                    <label>优先级</label>
+                    <select id="quickAddPriority">
+                        <option value="highest">最高</option>
+                        <option value="high">偏高</option>
+                        <option value="medium" selected>适中</option>
+                        <option value="low">偏低</option>
+                        <option value="lowest">最低</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <div style="flex:1">
+                    <label>开始</label>
+                    <input type="time" id="quickAddStart" value="09:00">
+                </div>
+                <div style="flex:1">
+                    <label>结束</label>
+                    <input type="time" id="quickAddEnd" value="10:00">
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="quickAddReminder" style="width:auto;">
+                <label for="quickAddReminder" style="margin:0; font-weight:normal; color:var(--text-main);">开启提醒 (提前5分钟)</label>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-outline" onclick="closeQuickAdd()">取消</button>
+                <button class="btn btn-primary" onclick="saveQuickAdd()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 数据核心 ====================
+        let tasks = JSON.parse(localStorage.getItem('finalV20Tasks')) || [];
+        let categories = JSON.parse(localStorage.getItem('finalV20Cats'));
+        let moods = JSON.parse(localStorage.getItem('dailySenseMoods')) || {};
+
+        // 默认初始化
+        if (!categories) {
+            categories = [
+                { name: "工作", color: "#0071e3" },
+                { name: "学习", color: "#64d2ff" },
+                { name: "生活", color: "#5e5ce6" },
+                { name: "运动", color: "#30b0c7" }
+            ];
+            localStorage.setItem('finalV20Cats', JSON.stringify(categories));
+        }
+
+        const themePalettes = {
+            'default': { '工作': '#0071e3', '学习': '#34c759', '生活': '#ff9f0a', '运动': '#5856d6' },
+            'warm': { '工作': '#4a5d4e', '学习': '#8fbc8f', '生活': '#d98e73', '运动': '#8c7b70' },
+            'pink': { '工作': '#e62e5c', '学习': '#ff85a1', '生活': '#ffb7b2', '运动': '#991035' },
+            'imissyou': { '工作': '#7e3e4a', '学习': '#5e3a44', '生活': '#948b4b', '运动': '#cdbf86' },
+            'pop': { '工作': '#ed5a6a', '学习': '#daa09f', '生活': '#8e74b5', '运动': '#f7c212' }
+        };
+        
+        const palette = ['#0071e3', '#34c759', '#ff9f0a', '#ff3b30', '#af52de', '#5ac8fa', '#5856d6', '#ff2d55'];
+        
+        let priorities = [
+            { val: 'highest', label: '最高', color: '', weight: 5 },
+            { val: 'high',    label: '偏高', color: '', weight: 4 },
+            { val: 'medium',  label: '适中', color: '', weight: 3 },
+            { val: 'low',     label: '偏低', color: '', weight: 2 },
+            { val: 'lowest',  label: '最低', color: '', weight: 1 }
+        ];
+        
+        const typeDetails = {
+            "INTJ": { name: "建筑师", slogan: "战略大师" },
+            "INTP": { name: "逻辑学家", slogan: "创造力天才" },
+            "ENTJ": { name: "指挥官", slogan: "天生领袖" },
+            "ENTP": { name: "辩论家", slogan: "思想开拓者" },
+            "INFJ": { name: "提倡者", slogan: "神秘的理想主义者" },
+            "INFP": { name: "调停者", slogan: "治愈系诗人" },
+            "ENFJ": { name: "主人公", slogan: "魅力演说家" },
+            "ENFP": { name: "竞选者", slogan: "自由的灵魂" },
+            "ISTJ": { name: "物流师", slogan: "坚若磐石" },
+            "ISFJ": { name: "守卫者", slogan: "温暖的守护者" },
+            "ESTJ": { name: "总经理", slogan: "高效管理者" },
+            "ESFJ": { name: "执政官", slogan: "社交达人" },
+            "ISTP": { name: "鉴赏家", slogan: "冷静的工匠" },
+            "ISFP": { name: "探险家", slogan: "灵动艺术家" },
+            "ESTP": { name: "企业家", slogan: "行动派" },
+            "ESFP": { name: "表演者", slogan: "聚光灯宠儿" }
+        };
+        
+        const weekDayNames = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+        let pickerDate = new Date();
+        let calDate = new Date();
+        let selectedDates = new Set();
+        let pickerMode = 'single';
+        let sortMode = 'time';
+        let currentReviewData = [];
+        let quadrantDots = [];
+        let selectedPlanIds = new Set();
+        let isBulkMode = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // PC端保持打开，移动端默认关闭
+            if(window.innerWidth > 900) {
+                 document.getElementById('sidebar').classList.remove('closed');
+            } else {
+                 document.getElementById('sidebar').classList.add('closed');
+            }
+            
+            const savedTheme = localStorage.getItem('dailySenseTheme') || 'default';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active'));
+            const activeCard = document.getElementById('theme-'+savedTheme);
+            if(activeCard) activeCard.classList.add('active');
+            refreshThemeColors();
+
+            autoSetMonthRange();
+            renderCategories();
+            renderPicker();
+            renderMainCal();
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
+            
+            selectCalDate(todayStr);
+            renderMbtiSection();
+            requestNotificationPermission();
+            setInterval(scheduleNotifications, 30000);
+        });
+
+        function autoSetMonthRange() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+            const startStr = `${year}-${month}-01`;
+            const endStr = `${year}-${month}-${lastDay}`;
+            
+            // 总结复盘默认
+            document.getElementById('sumStart').value = startStr;
+            document.getElementById('sumEnd').value = endStr;
+            
+            // 我的计划默认 (整年)
+            document.getElementById('myPlanStart').value = `${year}-01-01`;
+            document.getElementById('myPlanEnd').value = `${year}-12-31`;
+
+            // 情绪报表默认 (本月)
+            document.getElementById('moodReportStart').value = startStr;
+            document.getElementById('moodReportEnd').value = endStr;
+        }
+
+        function openMbtiPage() { window.open('a_mbti_test.html', '_blank'); }
+        
+        function renderMbtiSection() {
+            const mbtiCode = localStorage.getItem('dailySenseMBTI');
+            const contentArea = document.getElementById('mbtiContentArea');
+            const badge = document.getElementById('mbtiBadge');
+            
+            if(mbtiCode && typeDetails[mbtiCode]) {
+                const info = typeDetails[mbtiCode];
+                badge.innerText = mbtiCode;
+                badge.style.color = "var(--theme-color)";
+                contentArea.innerHTML = `
+                    <div style="font-size: 60px; font-weight: 800; color: var(--theme-color); line-height: 1; margin-bottom: 5px;">${mbtiCode}</div>
+                    <h2 style="margin-bottom: 5px;">${info.name}</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 25px; font-weight: 500;">"${info.slogan}"</p>
+                    <button class="btn btn-outline" style="padding:10px 25px;" onclick="openMbtiPage()">重新测试</button>
+                `;
+            } else {
+                badge.innerText = "?";
+                badge.style.color = "var(--text-secondary)";
+                contentArea.innerHTML = `
+                    <h2 style="margin-bottom:10px;">探索你的性格类型</h2>
+                    <p style="color:var(--text-secondary); margin-bottom:30px; max-width:400px;">基于荣格心理学维度的深度自我扫描，了解真实的自己，只需几分钟。</p>
+                    <button class="btn btn-primary" style="padding:12px 30px; font-size:16px;" onclick="openMbtiPage()">点击测试你的MBTI</button>
+                `;
+            }
+        }
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                if (Notification.permission !== "granted" && Notification.permission !== "denied") Notification.requestPermission();
+            }
+        }
+
+        function scheduleNotifications() {
+            if (Notification.permission !== "granted") return;
+            const now = new Date();
+            let hasUpdate = false;
+            tasks.forEach(t => {
+                if (t.reminderTime && !t.notified) {
+                    const targetTime = new Date(t.reminderTime);
+                    if (now >= targetTime) {
+                        const diff = (now - targetTime) / 1000 / 60;
+                        if (diff < 5) {
+                            new Notification(`日程提醒: ${t.title}`, {
+                                body: `您的计划 [${t.title}] 即将开始！\n分类: ${t.category} | 时间: ${t.startTime}`,
+                                icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png'
+                            });
+                        }
+                        t.notified = true; hasUpdate = true;
+                    }
+                }
+            });
+            if(hasUpdate) localStorage.setItem('finalV20Tasks', JSON.stringify(tasks));
+        }
+
+        function toggleReminderOptions() {
+            const toggle = document.getElementById('reminderToggle');
+            const options = document.getElementById('reminderOptions');
+            if (toggle.checked) { options.style.display = 'block'; requestNotificationPermission(); }
+            else { options.style.display = 'none'; }
+        }
+
+        function setTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('dailySenseTheme', themeName);
+            document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active'));
+            document.getElementById('theme-'+themeName).classList.add('active');
+            
+            const newPalette = themePalettes[themeName];
+            if (newPalette) {
+                let changed = false;
+                categories.forEach(cat => {
+                    if (newPalette[cat.name]) {
+                        cat.color = newPalette[cat.name];
+                        changed = true;
+                    }
+                });
+                if (changed) {
+                    localStorage.setItem('finalV20Cats', JSON.stringify(categories));
+                    renderCategories();
+                }
+            }
+            
+            setTimeout(() => {
+                refreshThemeColors();
+                refreshAll();
+            }, 50);
+        }
+
+        function refreshThemeColors() {
+            const style = getComputedStyle(document.documentElement);
+            priorities[0].color = style.getPropertyValue('--shade-1').trim();
+            priorities[1].color = style.getPropertyValue('--shade-2').trim();
+            priorities[2].color = style.getPropertyValue('--shade-3').trim();
+            priorities[3].color = style.getPropertyValue('--shade-4').trim();
+            priorities[4].color = style.getPropertyValue('--shade-5').trim();
+            renderPrioSelector();
+            
+            const currentDateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0];
+            if(currentDateStr && document.getElementById('view-calendar').style.display === 'block') {
+                 renderMoodEngine(currentDateStr);
+                 renderTodayGauge(currentDateStr); // Ensure gauge updates on theme change
+            }
+        }
+        
+        function refreshAll() {
+            if(document.getElementById('view-summary').style.display === 'block') renderSummary();
+            if(document.getElementById('view-calendar').style.display === 'block') {
+                renderMainCal();
+            }
+            if(document.getElementById('view-add').style.display === 'block') renderPrioSelector();
+            if(document.getElementById('view-myplans').style.display === 'block') renderMyPlans();
+            if(document.getElementById('view-moodreport').style.display === 'block') renderMoodReport();
+        }
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active-view');
+                el.style.display = 'none';
+            });
+            const target = document.getElementById('view-' + viewName);
+            if(target) {
+                target.style.display = 'block';
+                setTimeout(() => target.classList.add('active-view'), 10);
+            }
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // 更新索引以匹配新的菜单项顺序
+            const idx = ['add','calendar','myplans','summary','moodreport','category','mbti'].indexOf(viewName);
+            if(idx !== -1) document.querySelectorAll('.nav-item')[idx].classList.add('active');
+
+            // 手机端切换视图自动关闭侧边栏
+            if(window.innerWidth <= 900) {
+                document.getElementById('sidebar').classList.add('closed');
+            }
+
+            if(viewName === 'calendar') {
+                renderMainCal();
+                const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0];
+                if(ds) {
+                    renderMoodEngine(ds);
+                    renderTodayGauge(ds); // Draw Gauge on Switch
+                }
+            }
+            if(viewName === 'summary') { autoSetMonthRange(); renderSummary(); }
+            if(viewName === 'mbti') { renderMbtiSection(); }
+            if(viewName === 'myplans') { renderMyPlans(); }
+            if(viewName === 'moodreport') { autoSetMonthRange(); renderMoodReport(); }
+        }
+
+        function getColor(catName) {
+            const cat = categories.find(c => c.name === catName);
+            return cat ? cat.color : '#999';
+        }
+
+        function renderCategories() {
+            const sel = document.getElementById('inputCategory');
+            const quickSel = document.getElementById('quickAddCategory');
+            sel.innerHTML = ''; quickSel.innerHTML = '';
+            categories.forEach(c => {
+                const opt = `<option value="${c.name}">${c.name}</option>`;
+                sel.innerHTML += opt; quickSel.innerHTML += opt;
+            });
+            const cont = document.getElementById('catContainer');
+            if(cont) {
+                cont.innerHTML = '';
+                categories.forEach((c, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'cat-chip';
+                    div.style.borderColor = c.color;
+                    div.innerHTML = `<input type="color" class="color-picker-input" value="${c.color}" onchange="updateCatColor(${i}, this.value)"><span style="color:${c.color}">${c.name}</span><span onclick="delCat(${i})" style="color:#ccc; margin-left:5px;">✕</span>`;
+                    cont.appendChild(div);
+                });
+            }
+        }
+        window.updateCatColor = function(index, newColor) { categories[index].color = newColor; localStorage.setItem('finalV20Cats', JSON.stringify(categories)); renderCategories(); refreshAll(); };
+        function addCategory() { const v = document.getElementById('newCatInput').value.trim(); if(v && !categories.find(c => c.name === v)) { const rndColor = palette[Math.floor(Math.random() * palette.length)]; categories.push({ name: v, color: rndColor }); localStorage.setItem('finalV20Cats', JSON.stringify(categories)); renderCategories(); } }
+        window.delCat = function(i) { if(confirm('删除?')) { categories.splice(i,1); localStorage.setItem('finalV20Cats', JSON.stringify(categories)); renderCategories(); } };
+        function renderPrioSelector() { const container = document.getElementById('prioSelector'); container.innerHTML = ''; priorities.forEach(p => { const btn = document.createElement('div'); btn.className = 'prio-btn'; if(p.val === document.getElementById('inputPriority').value) { btn.classList.add('active'); btn.style.background = p.color; } btn.innerText = p.label; btn.onclick = () => { document.querySelectorAll('.prio-btn').forEach(b => { b.classList.remove('active'); b.style.background = 'transparent'; }); btn.classList.add('active'); btn.style.background = p.color; document.getElementById('inputPriority').value = p.val; }; container.appendChild(btn); }); }
+        function toggleDatePicker() { const el = document.getElementById('datePickerWrapper'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
+        function setPickerMode(mode) { pickerMode = mode; selectedDates.clear(); document.getElementById('modeSingle').className = mode === 'single' ? 'mode-btn active' : 'mode-btn'; document.getElementById('modeRange').className = mode === 'range' ? 'mode-btn active' : 'mode-btn'; renderPicker(); updateDateSummary(); }
+        function pickerChangeMonth(d) { pickerDate.setMonth(pickerDate.getMonth()+d); renderPicker(); }
+        function renderPicker() {
+            const y = pickerDate.getFullYear(), m = pickerDate.getMonth(); document.getElementById('pickerMonthStr').innerText = `${y}年 ${m+1}月`; const grid = document.getElementById('pickerGrid'); grid.innerHTML = ''; ["日","一","二","三","四","五","六"].forEach(d => grid.innerHTML += `<div class="picker-day-head">${d}</div>`); const first = new Date(y, m, 1).getDay(); const total = new Date(y, m+1, 0).getDate(); for(let i=0; i<first; i++) grid.innerHTML += `<div class="picker-day empty"></div>`;
+            for(let d=1; d<=total; d++) { const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; let classes = 'picker-day'; if(selectedDates.has(dateStr)) classes += ' selected'; grid.innerHTML += `<div class="${classes}" onclick="handleDateClick('${dateStr}')">${d}</div>`; }
+        }
+        let rangeStart = null;
+        function handleDateClick(dateStr) { if(pickerMode === 'single') { if(selectedDates.has(dateStr)) selectedDates.delete(dateStr); else selectedDates.add(dateStr); } else { if(!rangeStart) { rangeStart = dateStr; selectedDates.clear(); selectedDates.add(dateStr); } else { let start = new Date(rangeStart), end = new Date(dateStr); if(start > end) [start, end] = [end, start]; selectedDates.clear(); while(start <= end) { selectedDates.add(start.toISOString().split('T')[0]); start.setDate(start.getDate()+1); } rangeStart = null; } } renderPicker(); updateDateSummary(); }
+        function updateDateSummary() { document.getElementById('selectedCount').innerText = selectedDates.size; document.getElementById('dateSummary').innerText = selectedDates.size > 0 ? `已选 ${selectedDates.size} 天` : ''; }
+        function addNewTask() { const title = document.getElementById('inputTitle').value; const cat = document.getElementById('inputCategory').value; const priority = document.getElementById('inputPriority').value; const sTime = document.getElementById('inputStartTime').value; const eTime = document.getElementById('inputEndTime').value; const needReminder = document.getElementById('reminderToggle').checked; const reminderOffset = parseInt(document.getElementById('reminderOffsetSelect').value); if(!title || selectedDates.size === 0) return alert("请填写标题并选择日期"); selectedDates.forEach(dateStr => { let rTime = null; if(needReminder) { const startDateTime = new Date(`${dateStr}T${sTime}:00`); rTime = new Date(startDateTime.getTime() - reminderOffset * 60000).toISOString(); } tasks.push({ id: Date.now() + Math.random(), title, category: cat, priority, date: dateStr, startTime: sTime, endTime: eTime, progress: 0, reminderTime: rTime, notified: false }); }); localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); alert(`已生成 ${selectedDates.size} 条日程${needReminder ? '并设置了提醒' : ''}`); selectedDates.clear(); document.getElementById('inputTitle').value = ''; document.getElementById('reminderToggle').checked = false; document.getElementById('reminderOptions').style.display = 'none'; renderPicker(); updateDateSummary(); document.getElementById('datePickerWrapper').style.display = 'none'; }
+
+        // ==================== 2. 计划执行 ====================
+        function calChangeMonth(d) { calDate.setMonth(calDate.getMonth()+d); renderMainCal(); }
+        function renderMainCal() {
+            const y = calDate.getFullYear(), m = calDate.getMonth(); document.getElementById('calMonthStr').innerText = `${y}年 ${m+1}月`; const grid = document.getElementById('mainCalGrid'); grid.innerHTML = '';
+            const headRow = document.getElementById('calHeaderRow'); if(headRow.innerHTML === '') ["日","一","二","三","四","五","六"].forEach(d => headRow.innerHTML += `<div class="cal-week-head">${d}</div>`);
+            const first = new Date(y, m, 1).getDay(); const total = new Date(y, m+1, 0).getDate(); const todayStr = new Date().toISOString().split('T')[0]; const currentSelected = document.getElementById('selectedDateStr').innerText.split(' ')[0];
+            for(let i=0; i<first; i++) grid.innerHTML += `<div></div>`;
+            for(let d=1; d<=total; d++) {
+                const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const dayTasks = tasks.filter(t => t.date === dateStr);
+                let classes = "cal-day"; if(dateStr === todayStr) classes += " today"; if(dateStr === currentSelected) classes += " active";
+                let contentHTML = '';
+                if(dayTasks.length > 0) {
+                    let totalP = 0; dayTasks.forEach(t => totalP += parseInt(t.progress)); let dayPct = Math.round(totalP / (dayTasks.length * 100) * 100); const themeColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim();
+                    let dotsHTML = '<div class="cal-dots-row">'; dayTasks.forEach(t => { const c = getColor(t.category); dotsHTML += `<div class="cal-dot" style="background:${c}"></div>`; }); dotsHTML += '</div>';
+                    contentHTML = `<div class="cal-day-content"><div class="cal-day-prog-track"><div class="cal-day-prog-fill" style="width:${dayPct}%; background:linear-gradient(to right, ${themeColor} 0%, ${themeColor}aa 100%);"></div></div><div class="cal-day-pct">${dayPct}%</div>${dotsHTML}</div>`;
+                } else { contentHTML = `<div></div>`; }
+                grid.innerHTML += `<div class="${classes}" id="cday-${dateStr}" onclick="selectCalDate('${dateStr}')"><span class="cal-date-num">${d}</span>${contentHTML}</div>`;
+            }
+        }
+        function changeSort(mode, btn) { sortMode = mode; document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(ds && ds.indexOf('-') > -1) selectCalDate(ds); }
+
+        function selectCalDate(dateStr) {
+            const prev = document.querySelector('.cal-day.active'); if(prev) prev.classList.remove('active');
+            const currentEl = document.getElementById(`cday-${dateStr}`); if(currentEl) currentEl.classList.add('active');
+            const dObj = new Date(dateStr); document.getElementById('selectedDateStr').innerText = `${dateStr} ${weekDayNames[dObj.getDay()]}`;
+            const list = document.getElementById('calendarTaskList'); let htmlContent = '';
+            let dayTasks = tasks.filter(t => t.date === dateStr).slice();
+            if(sortMode === 'time') dayTasks.sort((a,b) => a.startTime.localeCompare(b.startTime));
+            else if (sortMode === 'priority') dayTasks.sort((a,b) => (priorities.find(p=>p.val===b.priority)?.weight||0) - (priorities.find(p=>p.val===a.priority)?.weight||0));
+            else if (sortMode === 'progress') dayTasks.sort((a,b) => a.progress - b.progress);
+            if(dayTasks.length === 0) { htmlContent += `<div style="text-align:center; color:var(--text-secondary); padding:20px 0;">今日暂无计划 ☕️</div>`; }
+            dayTasks.forEach(t => {
+                const color = getColor(t.category); const pObj = priorities.find(p => p.val === t.priority) || priorities[2]; const gradColor = `linear-gradient(to right, ${color} 0%, ${color} ${t.progress}%, #e5e5ea ${t.progress}%, #e5e5ea 100%)`;
+                htmlContent += `<div class="timeline-row"><div class="timeline-time-col"><div class="t-start">${t.startTime}</div><div class="t-end">${t.endTime}</div></div><div class="timeline-axis-col"><div class="timeline-line"></div><div class="timeline-dot" style="border-color:${color};"></div></div><div class="timeline-card-col"><div class="task-card"><div class="task-left"><div class="task-title ${t.progress==100?'task-done-title':''}">${t.title}</div><div class="task-meta"><span class="priority-badge" style="background:${pObj.color}">${pObj.label}</span><div style="display:flex;align-items:center;gap:3px; background:${color}15; padding:2px 6px; border-radius:4px;"><span style="width:6px;height:6px;border-radius:50%;background:${color}"></span><span style="color:${color}; font-size:11px;">${t.category}</span><div class="action-badge" style="color:${color};" onclick="openEditModal('${t.id}')">修改</div></div></div></div><div class="task-right"><div class="progress-label"><span>执行进度</span><span style="font-weight:700; color:${color}">${t.progress}%</span></div><div class="slider-wrapper"><input type="range" min="0" max="100" value="${t.progress}" data-color="${color}" style="background:${gradColor};" oninput="updateTask(${t.id}, this.value, this)"></div></div></div></div></div>`;
+            });
+            const connectorLine = dayTasks.length > 0 ? '<div style="width:2px; height:20px; background:var(--border);"></div>' : '';
+            htmlContent += `<div class="timeline-row" style="align-items: flex-start; margin-top: -10px;"><div class="timeline-time-col"></div><div class="timeline-axis-col" style="display:flex; flex-direction:column; align-items:center; overflow:visible;">${connectorLine}<div class="add-btn-container" onclick="openQuickAdd('${dateStr}')"><div class="timeline-add-circle">➕</div><div class="timeline-add-text">增加计划</div></div></div><div class="timeline-card-col"></div></div>`;
+            list.innerHTML = htmlContent;
+            drawDayGantt(dateStr, dayTasks);
+            renderMoodEngine(dateStr);
+            renderTodayGauge(dateStr);
+        }
+        
+        function updateTask(id, val, el) {
+            const t = tasks.find(x => x.id === id);
+            if(t) {
+                t.progress = parseInt(val);
+                const label = el.parentElement.previousElementSibling.querySelector('span:last-child');
+                if(label) label.innerText = val + '%';
+                const color = el.getAttribute('data-color');
+                el.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${val}%, #e5e5ea ${val}%, #e5e5ea 100%)`;
+                const card = el.closest('.task-card');
+                const title = card.querySelector('.task-title');
+                val == 100 ? title.classList.add('task-done-title') : title.classList.remove('task-done-title');
+                localStorage.setItem('finalV20Tasks', JSON.stringify(tasks));
+
+                // NEW: Update gauge in real-time when dragging
+                const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0];
+                renderTodayGauge(ds);
+            }
+        }
+
+        // ==================== 今日罗素情绪环逻辑 ====================
+        function handleMoodClick(e) {
+            const pad = document.getElementById('moodPad');
+            const rect = pad.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const pctX = (x / rect.width) * 100;
+            const pctY = (y / rect.height) * 100;
+            
+            const dateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0];
+            if(!dateStr || dateStr.indexOf('-') === -1) return;
+            
+            if(!moods[dateStr]) moods[dateStr] = { x: 50, y: 50, word: "" };
+            moods[dateStr].x = pctX; moods[dateStr].y = pctY;
+            localStorage.setItem('dailySenseMoods', JSON.stringify(moods));
+            updateMoodVisuals(pctX, pctY);
+        }
+
+        function saveMoodData() {
+            const dateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0];
+            const word = document.getElementById('moodWord').value;
+            if(!dateStr) return;
+            if(!moods[dateStr]) moods[dateStr] = { x: 50, y: 50, word: "" };
+            moods[dateStr].word = word;
+            localStorage.setItem('dailySenseMoods', JSON.stringify(moods));
+        }
+
+        function renderMoodEngine(dateStr) {
+            const data = moods[dateStr] || { x: 50, y: 50, word: "" };
+            updateMoodVisuals(data.x, data.y);
+            document.getElementById('moodWord').value = data.word;
+        }
+
+        function updateMoodVisuals(x, y) {
+            const cursor = document.getElementById('moodCursor');
+            const pad = document.getElementById('moodPad');
+            cursor.style.left = x + '%'; cursor.style.top = y + '%';
+            pad.style.setProperty('--mood-x', x + '%'); pad.style.setProperty('--mood-y', y + '%');
+        }
+
+        // ==================== 今日计划完成率仪表盘逻辑 ====================
+        function renderTodayGauge(dateStr) {
+            const canvas = document.getElementById('todayGaugeCanvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const width = 240;
+            const height = 140;
+            
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const dayTasks = tasks.filter(t => t.date === dateStr);
+            let totalProg = 0;
+            let maxProg = dayTasks.length * 100;
+            dayTasks.forEach(t => totalProg += t.progress);
+            
+            let pct = 0;
+            if (maxProg > 0) {
+                pct = totalProg / maxProg;
+            } else if (dayTasks.length === 0) {
+                pct = 0;
+            }
+
+            const cx = width / 2;
+            const cy = height - 15;
+            const r = 80;
+            const themeColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim();
+            const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim();
+
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, Math.PI, 0);
+            ctx.lineWidth = 14;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#eee";
+            ctx.stroke();
+
+            if(pct > 0) {
+                ctx.beginPath();
+                const endAngle = Math.PI + (Math.PI * Math.max(pct, 0.01));
+                ctx.arc(cx, cy, r, Math.PI, endAngle);
+                ctx.lineWidth = 14;
+                ctx.lineCap = "round";
+                ctx.strokeStyle = themeColor;
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = textColor;
+            ctx.font = "bold 32px -apple-system, BlinkMacSystemFont, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(Math.round(pct * 100) + "%", cx, cy - 25);
+
+            ctx.fillStyle = "#86868b";
+            ctx.font = "12px -apple-system, BlinkMacSystemFont, sans-serif";
+            if(dayTasks.length === 0) {
+                 ctx.fillText("今日无计划", cx, cy);
+            } else {
+                 ctx.fillText(`已完成: ${dayTasks.filter(t=>t.progress===100).length}/${dayTasks.length}`, cx, cy);
+            }
+        }
+
+        // ==================== 情绪跟踪报表逻辑 (HD & Interaction Updated) ====================
+        function renderMoodReport() {
+            const s = document.getElementById('moodReportStart').value;
+            const e = document.getElementById('moodReportEnd').value;
+            if(!s || !e) return;
+
+            const themeColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim();
+            const filteredMoods = {};
+            let curr = new Date(s);
+            const end = new Date(e);
+            const dateList = [];
+            while(curr <= end) {
+                const ds = curr.toISOString().split('T')[0];
+                dateList.push(ds);
+                if(moods[ds]) filteredMoods[ds] = moods[ds];
+                curr.setDate(curr.getDate()+1);
+            }
+
+            // 1. 热力图
+            renderHeatmap('energyHeatmap', dateList, 'energy');
+            renderHeatmap('pleasantHeatmap', dateList, 'pleasant');
+
+            // 2. 情绪词云 (使用新的螺旋布局)
+            const wordCounts = {};
+            Object.values(filteredMoods).forEach(m => { if(m.word) wordCounts[m.word] = (wordCounts[m.word]||0)+1; });
+            const sortedWords = Object.keys(wordCounts).map(k => ({word:k, count:wordCounts[k]})).sort((a,b)=>b.count-a.count).slice(0,30);
+            renderSpiralWordCloud('moodWordCloudContainer', sortedWords);
+
+            // 3. 散点图 (HD + 交互)
+            // 需要传递带日期的数组
+            const moodArray = dateList.map(ds => {
+                if(moods[ds]) return { ...moods[ds], date: ds };
+                return null;
+            }).filter(m => m !== null);
+            renderMoodScatter(moodArray, themeColor);
+
+            // 4. 趋势图
+            renderMoodTrend(dateList, filteredMoods, themeColor);
+
+            // 5. 周雷达图 (HD)
+            renderMoodWeeklyRadarSplit(filteredMoods, themeColor);
+        }
+
+        function renderHeatmap(containerId, dateList, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            const firstDate = new Date(dateList[0]);
+            const firstDay = firstDate.getDay();
+            for(let i=0; i<firstDay; i++) {
+                container.innerHTML += `<div class="heatmap-cell"></div>`;
+            }
+
+            dateList.forEach(ds => {
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell';
+                const dayNum = ds.split('-')[2];
+                cell.innerText = parseInt(dayNum);
+                
+                if(moods[ds]) {
+                    cell.classList.add('has-data');
+                    let val = 0;
+                    if(type === 'energy') {
+                        val = 100 - moods[ds].y;
+                    } else {
+                        val = moods[ds].x;
+                    }
+                    const opacity = 0.1 + (val / 100 * 0.9);
+                    const themeColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim();
+                    cell.style.background = themeColor;
+                    cell.style.opacity = opacity;
+                    cell.title = `${ds}: ${Math.round(val)}%`;
+                }
+                container.appendChild(cell);
+            });
+        }
+
+        // --- HD Scatter Plot with Tooltip ---
+        function renderMoodScatter(dataValues, themeColor) {
+            const cvs = document.getElementById('moodScatterCanvas');
+            const tooltip = document.getElementById('quadrantTooltip');
+            const ctx = cvs.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Get proper dimensions
+            const rect = cvs.parentElement.getBoundingClientRect();
+            const w = rect.width;
+            const h = rect.height;
+            
+            // HD Setup
+            cvs.style.width = w + 'px';
+            cvs.style.height = h + 'px';
+            cvs.width = w * dpr;
+            cvs.height = h * dpr;
+            ctx.scale(dpr, dpr);
+            
+            ctx.clearRect(0,0,w,h);
+            
+            // Draw Axes
+            ctx.strokeStyle = "#ddd"; ctx.beginPath();
+            ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h);
+            ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = "#999"; ctx.font = "10px sans-serif"; ctx.textAlign="center";
+            ctx.fillText("Pleasant", w-25, h/2 - 5); ctx.fillText("Unpleasant", 35, h/2 - 5);
+            ctx.fillText("High Energy", w/2, 12); ctx.fillText("Low Energy", w/2, h-5);
+
+            // Draw Dots & Store positions for tooltip
+            const dotRadius = 5;
+            const clickData = [];
+
+            dataValues.forEach(m => {
+                const x = (m.x / 100) * w;
+                const y = (m.y / 100) * h;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius, 0, Math.PI*2);
+                ctx.fillStyle = themeColor;
+                ctx.globalAlpha = 0.6;
+                ctx.fill();
+                
+                clickData.push({ x, y, date: m.date, word: m.word, valX: Math.round(m.x), valY: Math.round(100 - m.y) });
+            });
+            ctx.globalAlpha = 1.0;
+
+            // Interactive Tooltip Logic
+            cvs.onmousemove = function(e) {
+                const r = cvs.getBoundingClientRect();
+                const mx = e.clientX - r.left;
+                const my = e.clientY - r.top;
+                let found = null;
+                
+                for(let p of clickData) {
+                    const dx = mx - p.x;
+                    const dy = my - p.y;
+                    if(dx*dx + dy*dy < 100) { // Check distance squared (10px radius tolerance)
+                        found = p;
+                        break;
+                    }
+                }
+
+                if(found) {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = (e.clientX + 10) + 'px';
+                    tooltip.style.top = (e.clientY + 10) + 'px';
+                    tooltip.innerHTML = `<strong style="font-size:14px; display:block; margin-bottom:4px;">${found.date}</strong>能量: ${found.valY}%<br>愉悦: ${found.valX}%<br>${found.word ? '<span style="color:#aaa; font-style:italic;">'+found.word+'</span>' : ''}`;
+                    cvs.style.cursor = 'pointer';
+                } else {
+                    tooltip.style.display = 'none';
+                    cvs.style.cursor = 'default';
+                }
+            };
+            
+            cvs.onmouseleave = function() {
+                tooltip.style.display = 'none';
+            };
+        }
+
+        // --- NEW: Spiral Word Cloud Layout (Horizontal/Oval) ---
+        function renderSpiralWordCloud(containerId, sortedWords) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if(!sortedWords || sortedWords.length === 0) {
+                container.innerHTML = '<span style="color:#999;">无数据</span>';
+                return;
+            }
+
+            const cloudColors = ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#457b9d', '#8ab17d', '#b5838d'];
+            const cw = container.offsetWidth;
+            const ch = container.offsetHeight;
+            const centerX = cw / 2;
+            const centerY = ch / 2;
+            
+            // Aspect ratio for oval shape (width > height)
+            const aspectRatio = cw / ch * 0.8;
+            
+            const placedRects = [];
+
+            sortedWords.forEach((item, index) => {
+                const span = document.createElement('div');
+                span.className = 'word-tag';
+                span.innerText = item.word;
+                
+                // Font Size: Max 28px, Min 10px. Decreases with rank.
+                const maxFontSize = 28;
+                const minFontSize = 10;
+                const size = Math.max(minFontSize, maxFontSize - (index * 1.5));
+                
+                span.style.fontSize = size + 'px';
+                span.style.color = cloudColors[index % cloudColors.length];
+                
+                // Append first to measure size
+                container.appendChild(span);
+                const w = span.offsetWidth;
+                const h = span.offsetHeight;
+
+                // Spiral Algorithm
+                let angle = 0;
+                let radius = 0;
+                let x = 0, y = 0;
+                const stepAngle = 0.2; // Radian step
+                const stepRadius = 2;  // Pixel step
+
+                if (index === 0) {
+                    // Center the biggest word
+                    x = centerX - w/2;
+                    y = centerY - h/2;
+                } else {
+                    let collision = true;
+                    let safety = 0;
+                    while(collision && safety < 1000) {
+                        // Oval Spiral Equation
+                        x = centerX + (radius * aspectRatio * Math.cos(angle)) - w/2;
+                        y = centerY + (radius * Math.sin(angle)) - h/2;
+
+                        // Bounds check
+                        const rect = { left: x, right: x+w, top: y, bottom: y+h };
+                        
+                        // Check collision with placed words
+                        let overlap = false;
+                        for(let pr of placedRects) {
+                            if(!(rect.right < pr.left || rect.left > pr.right || rect.bottom < pr.top || rect.top > pr.bottom)) {
+                                overlap = true;
+                                break;
+                            }
+                        }
+                        
+                        if(!overlap) {
+                            // Boundary check (keep inside container if possible)
+                            if(x > 0 && x + w < cw && y > 0 && y + h < ch) {
+                                collision = false;
+                            } else {
+                                // If out of bounds, keep spiral going but consider it valid if loop is excessive
+                                if (safety > 500) collision = false;
+                                else { angle += stepAngle; radius += 0.5; safety++; }
+                            }
+                        } else {
+                            angle += stepAngle;
+                            radius += 0.5; // Slowly increase radius
+                            safety++;
+                        }
+                    }
+                }
+
+                span.style.left = x + 'px';
+                span.style.top = y + 'px';
+                placedRects.push({ left: x, right: x+w, top: y, bottom: y+h });
+            });
+        }
+
+        function renderMoodTrend(dateList, filteredMoods, themeColor) {
+            const cvs = document.getElementById('moodTrendCanvas');
+            const ctx = cvs.getContext('2d');
+            const rect = cvs.parentElement.getBoundingClientRect();
+            
+            const dpr = window.devicePixelRatio || 1;
+            cvs.width = rect.width * dpr;
+            cvs.height = rect.height * dpr;
+            cvs.style.width = rect.width + 'px';
+            cvs.style.height = rect.height + 'px';
+            ctx.scale(dpr, dpr);
+            
+            const w = rect.width, h = rect.height;
+            ctx.clearRect(0,0,w,h);
+
+            if(dateList.length < 2) return;
+
+            const step = w / (dateList.length - 1);
+            
+            // Draw Energy Line (Y inverted: small y is high energy)
+            ctx.beginPath();
+            ctx.strokeStyle = "#ff9f0a"; ctx.lineWidth = 2;
+            dateList.forEach((ds, i) => {
+                const val = filteredMoods[ds] ? filteredMoods[ds].y : 50;
+                const y = (val/100) * h;
+                if(i===0) ctx.moveTo(0, y); else ctx.lineTo(i*step, y);
+            });
+            ctx.stroke();
+
+            // Draw Pleasantness Line
+            ctx.beginPath();
+            ctx.strokeStyle = themeColor; ctx.lineWidth = 2;
+            dateList.forEach((ds, i) => {
+                const pVal = filteredMoods[ds] ? filteredMoods[ds].x : 50;
+                const y = h - (pVal/100) * h;
+                if(i===0) ctx.moveTo(0, y); else ctx.lineTo(i*step, y);
+            });
+            ctx.stroke();
+
+            // Legend
+            ctx.fillStyle = "#ff9f0a"; ctx.fillText("● 能量 (反向: 低位=高能量)", 10, 15);
+            ctx.fillStyle = themeColor; ctx.fillText("● 心情 (高位=愉悦)", 10, 30);
+        }
+
+        // --- HD Radar Charts ---
+        function renderMoodWeeklyRadarSplit(filteredMoods, themeColor) {
+            const days = ["周日","周一","周二","周三","周四","周五","周六"];
+            const stats = days.map(() => ({eSum:0, pSum:0, count:0}));
+
+            Object.keys(filteredMoods).forEach(ds => {
+                const d = new Date(ds).getDay();
+                const m = filteredMoods[ds];
+                stats[d].eSum += (100 - m.y); // Convert y to Energy magnitude
+                stats[d].pSum += m.x;
+                stats[d].count++;
+            });
+
+            const eAvgs = stats.map(s => s.count ? s.eSum/s.count : 0);
+            const pAvgs = stats.map(s => s.count ? s.pSum/s.count : 0);
+
+            // Draw Energy Chart
+            drawSingleRadar('moodWeeklyEnergyCanvas', eAvgs, days, '#ff9f0a', '平均能量');
+            // Draw Pleasant Chart
+            drawSingleRadar('moodWeeklyPleasantCanvas', pAvgs, days, themeColor, '平均愉悦');
+        }
+
+        function drawSingleRadar(canvasId, values, labels, color, titleText) {
+            const cvs = document.getElementById(canvasId);
+            const ctx = cvs.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Use 300x300 as base size
+            const w = 300, h = 300;
+            
+            // HD Setup
+            cvs.style.width = w + 'px';
+            cvs.style.height = h + 'px';
+            cvs.width = w * dpr;
+            cvs.height = h * dpr;
+            ctx.scale(dpr, dpr);
+            
+            const cx = w/2, cy = h/2, r = 100;
+            ctx.clearRect(0,0,w,h);
+
+            // Draw Background
+            ctx.strokeStyle = "#eee";
+            ctx.lineWidth = 1;
+            for(let level=1; level<=4; level++) {
+                ctx.beginPath();
+                for(let i=0; i<7; i++) {
+                    const ang = (Math.PI*2 * i)/7 - Math.PI/2;
+                    const rad = (r/4)*level;
+                    ctx[i===0?'moveTo':'lineTo'](cx + Math.cos(ang)*rad, cy + Math.sin(ang)*rad);
+                }
+                ctx.closePath(); ctx.stroke();
+            }
+            // Axis & Labels
+            ctx.fillStyle = "#666"; ctx.textAlign="center"; ctx.textBaseline="middle";
+            ctx.font = "11px sans-serif";
+            for(let i=0; i<7; i++) {
+                const ang = (Math.PI*2 * i)/7 - Math.PI/2;
+                ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r); ctx.stroke();
+                ctx.fillText(labels[i], cx+Math.cos(ang)*(r+20), cy+Math.sin(ang)*(r+20));
+            }
+
+            // Draw Data Polygon
+            ctx.beginPath();
+            for(let i=0; i<7; i++) {
+                const ang = (Math.PI*2 * i)/7 - Math.PI/2;
+                const rad = (values[i]/100)*r;
+                ctx[i===0?'moveTo':'lineTo'](cx + Math.cos(ang)*rad, cy + Math.sin(ang)*rad);
+            }
+            ctx.closePath();
+            
+            // Fill with opacity
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.4;
+            ctx.fill();
+            
+            // Stroke
+            ctx.globalAlpha = 1.0;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Title
+            ctx.fillStyle = color;
+            ctx.font = "bold 14px sans-serif";
+            ctx.fillText(titleText, cx, h - 10);
+        }
+
+        // ... (其他辅助函数 openEditModal, closeEditModal, saveEdit, deleteTask, closeQuickAdd, saveQuickAdd, drawDayGantt 等保持不变) ...
+        function openEditModal(id) { const t = tasks.find(x => x.id == id); if(!t) return; document.getElementById('editTaskId').value = id; document.getElementById('editTitle').value = t.title; document.getElementById('editDate').value = t.date; document.getElementById('editPriority').value = t.priority; document.getElementById('editModal').style.display = 'flex'; }
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+        function saveEdit() { const id = document.getElementById('editTaskId').value; const t = tasks.find(x => x.id == id); if(t) { t.title = document.getElementById('editTitle').value; t.date = document.getElementById('editDate').value; t.priority = document.getElementById('editPriority').value; localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); refreshAll(); closeEditModal(); } }
+        function deleteTask() { if(!confirm("确定要删除吗？")) return; const id = document.getElementById('editTaskId').value; tasks = tasks.filter(t => t.id != id); localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); refreshAll(); closeEditModal(); }
+        function openQuickAdd(dateStr) { document.getElementById('quickAddDate').value = dateStr; document.getElementById('quickAddTitle').value = ''; document.getElementById('quickAddStart').value = "09:00"; document.getElementById('quickAddEnd').value = "10:00"; document.getElementById('quickAddReminder').checked = false; document.getElementById('quickAddModal').style.display = 'flex'; document.getElementById('quickAddTitle').focus(); }
+        function closeQuickAdd() { document.getElementById('quickAddModal').style.display = 'none'; }
+        function saveQuickAdd() { const dateStr = document.getElementById('quickAddDate').value; const title = document.getElementById('quickAddTitle').value.trim(); const cat = document.getElementById('quickAddCategory').value; const priority = document.getElementById('quickAddPriority').value; const sTime = document.getElementById('quickAddStart').value; const eTime = document.getElementById('quickAddEnd').value; const reminder = document.getElementById('quickAddReminder').checked; if(!title) return alert("请输入计划内容"); let rTime = null; if(reminder) { const startDateTime = new Date(`${dateStr}T${sTime}:00`); rTime = new Date(startDateTime.getTime() - 5 * 60000).toISOString(); } tasks.push({ id: Date.now() + Math.random(), title, category: cat, priority, date: dateStr, startTime: sTime, endTime: eTime, progress: 0, reminderTime: rTime, notified: false }); localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); closeQuickAdd(); renderMainCal(); selectCalDate(dateStr); if(document.getElementById('view-myplans').style.display === 'block') renderMyPlans(); }
+        function drawDayGantt(dateStr, dayTasks) { const canvas = document.getElementById('dayGanttCanvas'); const ctx = canvas.getContext('2d'); const data = dayTasks.slice().sort((a,b) => a.startTime.localeCompare(b.startTime)); const taskColW = 150, barAreaW = 800, rowH = 40, headH = 30; const totalW = taskColW + barAreaW, totalH = headH + (Math.max(data.length, 1) * rowH) + 10; const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim(); const dpr = window.devicePixelRatio || 1; canvas.width = totalW * dpr; canvas.height = totalH * dpr; canvas.style.width = '100%'; canvas.style.height = 'auto'; ctx.scale(dpr, dpr); ctx.clearRect(0,0,totalW,totalH); ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; ctx.textAlign = "center"; for(let h=0; h<=24; h+=2) { const x = taskColW + (h/24 * barAreaW); ctx.fillText(h, x, 20); ctx.beginPath(); ctx.moveTo(x, headH); ctx.lineTo(x, totalH); ctx.strokeStyle = "#f0f0f0"; ctx.stroke(); } ctx.beginPath(); ctx.moveTo(0,headH); ctx.lineTo(totalW,headH); ctx.strokeStyle = "#e5e5ea"; ctx.stroke(); if(data.length === 0) { ctx.fillStyle = "#ccc"; ctx.textAlign = "center"; ctx.fillText("无数据", totalW/2, totalH/2); return; } let y = headH; data.forEach((t, i) => { if(i%2===0) { ctx.fillStyle = "rgba(0,0,0,0.03)"; ctx.fillRect(0, y, totalW, rowH); } ctx.fillStyle = textColor; ctx.textAlign = "left"; ctx.font = "12px sans-serif"; let title = t.title; if(title.length > 12) title = title.substring(0,11)+".."; ctx.fillText(title, 10, y+24); const sM = parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1]); const eM = parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1]); let dur = eM - sM; if(dur<0) dur = 0; const barX = taskColW + (sM/1440 * barAreaW), barW = Math.max(dur/1440 * barAreaW, 4), color = getColor(t.category); ctx.fillStyle = color; roundRect(ctx, barX, y+10, barW, 20, 4); if(t.progress > 0) { ctx.fillStyle = "rgba(255,255,255,0.4)"; roundRect(ctx, barX, y+10, barW * (t.progress/100), 20, 4); } y += rowH; }); }
+        
+        function renderMyPlans() {
+            const container = document.getElementById('myPlansContent');
+            const searchVal = document.getElementById('myPlansSearch').value.toLowerCase();
+            const viewMode = document.getElementById('myPlansViewMode').value;
+            const sStr = document.getElementById('myPlanStart').value;
+            const eStr = document.getElementById('myPlanEnd').value;
+            container.innerHTML = ''; updateBulkActionBar();
+            if (isBulkMode) container.classList.add('bulk-mode'); else container.classList.remove('bulk-mode');
+            let filteredTasks = tasks.filter(t => { if (searchVal && !t.title.toLowerCase().includes(searchVal)) return false; if (t.date < sStr || t.date > eStr) return false; return true; });
+            let groups = {}, groupKeys = [];
+            if (viewMode === 'date') {
+                const now = new Date(); const year = now.getFullYear(); const month = String(now.getMonth() + 1).padStart(2, '0'); const day = String(now.getDate()).padStart(2, '0'); const todayStr = `${year}-${month}-${day}`; const currentDay = now.getDay() || 7; const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + (7 - currentDay)); const weekEndStr = weekEnd.toISOString().split('T')[0]; const nextWeekStart = new Date(weekEnd); nextWeekStart.setDate(weekEnd.getDate() + 1); const nextWeekStartStr = nextWeekStart.toISOString().split('T')[0]; const nextWeekEnd = new Date(nextWeekStart); nextWeekEnd.setDate(nextWeekStart.getDate() + 6); const nextWeekEndStr = nextWeekEnd.toISOString().split('T')[0];
+                groups = { past: { name: '过去', items: [] }, thisWeek: { name: '本周', items: [] }, today: { name: '今日', items: [] }, nextWeek: { name: '下周', items: [] }, later: { name: '以后', items: [] } }; groupKeys = ['past', 'thisWeek', 'today', 'nextWeek', 'later'];
+                filteredTasks.forEach(t => { const tDateStr = t.date; if (tDateStr < todayStr) groups.past.items.push(t); else if (tDateStr === todayStr) groups.today.items.push(t); else if (tDateStr <= weekEndStr) groups.thisWeek.items.push(t); else if (tDateStr >= nextWeekStartStr && tDateStr <= nextWeekEndStr) groups.nextWeek.items.push(t); else groups.later.items.push(t); });
+            } else if (viewMode === 'priority') {
+                groups = { highest: { name: '最高', items: [] }, high: { name: '偏高', items: [] }, medium: { name: '适中', items: [] }, low: { name: '偏低', items: [] }, lowest: { name: '最低', items: [] } }; groupKeys = ['highest', 'high', 'medium', 'low', 'lowest']; filteredTasks.forEach(t => { if (groups[t.priority]) groups[t.priority].items.push(t); else groups.medium.items.push(t); });
+            } else if (viewMode === 'status') {
+                groups = { done: { name: '已完成 (100%)', items: [] }, p80: { name: '80% 以上', items: [] }, p60: { name: '60% 以上', items: [] }, p40: { name: '40% 以上', items: [] }, p20: { name: '20% 以上', items: [] }, started: { name: '20% 以下 (起步)', items: [] }, unstarted: { name: '未开始 (0%)', items: [] } }; groupKeys = ['done', 'p80', 'p60', 'p40', 'p20', 'started', 'unstarted']; filteredTasks.forEach(t => { const p = t.progress; if (p === 100) groups.done.items.push(t); else if (p >= 80) groups.p80.items.push(t); else if (p >= 60) groups.p60.items.push(t); else if (p >= 40) groups.p40.items.push(t); else if (p >= 20) groups.p20.items.push(t); else if (p > 0) groups.started.items.push(t); else groups.unstarted.items.push(t); });
+            }
+            const sortFn = (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime);
+            groupKeys.forEach((key, index) => {
+                const group = groups[key]; group.items.sort(sortFn);
+                const opacity = Math.max(0.4, 1 - (index * 0.1)); const headerColorStyle = `color: var(--theme-color); opacity: ${opacity};`;
+                const section = document.createElement('div'); section.className = 'plan-group';
+                if (viewMode === 'date') { if (key !== 'today') section.classList.add('collapsed'); } else { section.classList.add('collapsed'); }
+                section.innerHTML = `<div class="group-header" onclick="toggleGroup(this)" style="${headerColorStyle}"><div class="arrow-icon" style="border-color: currentColor;"></div><div class="group-name">${group.name} <span class="group-count" style="color:var(--text-secondary); opacity:0.8;">${group.items.length}</span></div></div><div class="group-content"><table class="plan-table"><thead><tr><th class="col-check"><input type="checkbox" onclick="toggleSelectGroup(this, '${key}')"></th><th class="col-date">计划日期</th><th class="col-time">计划时间</th><th class="col-title">计划内容</th><th class="col-prio">优先级</th><th class="col-prog">完成进度</th><th class="col-cat">项目类型</th></tr></thead><tbody id="tbody-${key}"></tbody></table></div>`;
+                container.appendChild(section);
+                const tbody = section.querySelector(`#tbody-${key}`);
+                if (group.items.length > 0) { group.items.forEach(t => { const row = document.createElement('tr'); let prioOpts = ''; priorities.forEach(p => { prioOpts += `<option value="${p.val}" ${t.priority === p.val ? 'selected' : ''}>${p.label}</option>`; }); let catOpts = ''; categories.forEach(c => { catOpts += `<option value="${c.name}" ${t.category === c.name ? 'selected' : ''}>${c.name}</option>`; }); const catColor = getColor(t.category); const isChecked = selectedPlanIds.has(String(t.id)) ? 'checked' : ''; row.innerHTML = `<td class="col-check"><input type="checkbox" class="plan-checkbox" value="${t.id}" ${isChecked} onchange="handlePlanSelect(this)"></td><td><input type="date" class="table-input" value="${t.date}" onchange="updatePlanField('${t.id}', 'date', this.value)"></td><td><input type="time" class="table-input" value="${t.startTime}" onchange="updatePlanField('${t.id}', 'startTime', this.value)"></td><td><input type="text" class="table-input" value="${t.title}" onchange="updatePlanField('${t.id}', 'title', this.value)"></td><td><select class="table-input" style="background:${priorities.find(p=>p.val===t.priority)?.color}20; color:${priorities.find(p=>p.val===t.priority)?.color}; font-weight:600;" onchange="updatePlanField('${t.id}', 'priority', this.value)">${prioOpts}</select></td><td><div class="prog-cell"><div class="table-prog-track"><div class="table-prog-bar-fill" style="width:${t.progress}%; background:${catColor}"></div></div><span style="font-size:12px; margin-left:8px; color:var(--text-secondary); width:35px; text-align:right;">${t.progress}%</span></div></td><td><div style="display:flex; align-items:center;"><div class="status-dot" style="background:${catColor}"></div><select class="table-input" style="width:auto;" onchange="updatePlanField('${t.id}', 'category', this.value)">${catOpts}</select></div></td>`; tbody.appendChild(row); }); }
+            });
+        }
+        function toggleGroup(header) { header.parentElement.classList.toggle('collapsed'); }
+        function updatePlanField(id, field, value) { const t = tasks.find(x => x.id == id); if (t) { if(field === 'progress') value = parseInt(value); t[field] = value; localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); const mode = document.getElementById('myPlansViewMode').value; if (field === 'date' || (mode === 'priority' && field === 'priority') || (mode === 'status' && field === 'progress')) { renderMyPlans(); } else { if(field === 'category' || field === 'priority') refreshAll(); } } }
+        function toggleBulkMode() { isBulkMode = !isBulkMode; const btn = document.getElementById('btnToggleBulk'); const container = document.getElementById('myPlansContent'); if(isBulkMode) { btn.innerText = "取消删除"; btn.classList.add('btn-secondary'); btn.classList.remove('btn-outline'); container.classList.add('bulk-mode'); } else { btn.innerText = "批量删除"; btn.classList.remove('btn-secondary'); btn.classList.add('btn-outline'); container.classList.remove('bulk-mode'); selectedPlanIds.clear(); updateBulkActionBar(); document.querySelectorAll('.plan-checkbox').forEach(cb => cb.checked = false); } }
+        function toggleSelectGroup(masterCheckbox, groupKey) { const tbody = document.getElementById(`tbody-${groupKey}`); if(!tbody) return; const boxes = tbody.querySelectorAll('.plan-checkbox'); boxes.forEach(box => { box.checked = masterCheckbox.checked; handlePlanSelect(box, false); }); updateBulkActionBar(); }
+        function handlePlanSelect(checkbox, updateBar = true) { const id = checkbox.value; if (checkbox.checked) selectedPlanIds.add(id); else selectedPlanIds.delete(id); if (updateBar) updateBulkActionBar(); }
+        function updateBulkActionBar() { const bar = document.getElementById('bulkActionsBar'); document.getElementById('selectedPlanCount').innerText = selectedPlanIds.size; if (selectedPlanIds.size > 0 && isBulkMode) bar.classList.add('show'); else bar.classList.remove('show'); }
+        function deleteSelectedPlans() { if (!confirm(`确定要删除选中的 ${selectedPlanIds.size} 项计划吗？`)) return; tasks = tasks.filter(t => !selectedPlanIds.has(String(t.id))); localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); toggleBulkMode(); renderMyPlans(); refreshAll(); }
+
+        // 复盘的核心图表渲染 (使用新的 spiral 词云)
+        function renderSummary() {
+            const s = document.getElementById('sumStart').value; const e = document.getElementById('sumEnd').value; const data = tasks.filter(t => t.date >= s && t.date <= e); currentReviewData = data; const catSel = document.getElementById('reviewCatFilter'); catSel.innerHTML = '<option value="all">所有项目</option>'; categories.forEach(c => catSel.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+            if(data.length === 0) { const lc = document.getElementById('ganttLeftCanvas'); const rc = document.getElementById('ganttRightCanvas'); if(lc && rc) { lc.width=0; rc.width=0; } const charts = ['gaugeCanvas','trendCanvas','radarChartCanvas','eisenhowerCanvas']; charts.forEach(id => { const c = document.getElementById(id); if(c) { const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); } }); document.getElementById('wordCloudContainer').innerHTML = '<div style="color:#999;">无数据</div>'; return; }
+            try {
+                const mainColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim();
+                drawSplitGantt(data, s, e); renderStats(data); filterReviewTable(); renderPriorityChart(data); renderGaugeChart(data, mainColor); renderCatComparison(data); renderTrendChart(data, mainColor); renderPeakHoursChart(data, mainColor); renderWeeklyChart(data, mainColor); renderDurationStats(data); renderRadarChart(data, mainColor, s, e); renderEisenhowerChart(data, mainColor);
+                
+                // Word Cloud Logic using Spiral
+                const words = {};
+                data.forEach(t => {
+                    const parts = t.title.split(/[\s,，.。]+/);
+                    parts.forEach(w => { if(w.length > 1) words[w] = (words[w] || 0) + 1; });
+                });
+                const sorted = Object.keys(words).map(k => ({ word: k, count: words[k] })).sort((a,b) => b.count - a.count).slice(0, 30);
+                renderSpiralWordCloud('wordCloudContainer', sorted);
+                
+            } catch(err) { console.error(err); }
+        }
+        function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); ctx.fill(); }
+        // ... (图表函数实现与上一版一致，省略以节省字符，请确保它们存在于最终文件中) ...
+        function renderStats(data) { const durMap = {}; let totalMin = 0; data.forEach(t => { const min = (parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1])); const d = min > 0 ? min : 0; durMap[t.category] = (durMap[t.category]||0) + d; totalMin += d; }); let grad = [], currDeg = 0, legend = ''; const cats = Object.keys(durMap); cats.forEach((cat, index) => { const p = durMap[cat]/totalMin; const deg = p*360; const c = getColor(cat); grad.push(`${c} ${currDeg}deg ${currDeg+deg}deg`); currDeg += deg; legend += `<div style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;background:${c};border-radius:50%"></span>${cat} ${Math.round(p*100)}%</div>`; }); document.getElementById('pieChart').style.background = `conic-gradient(${grad.join(',')})`; document.getElementById('pieLegend').innerHTML = legend; }
+        function renderDurationStats(data) { let short=0, medium=0, long=0; data.forEach(t => { const m = (parseInt(t.endTime.split(':')[0])*60+parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60+parseInt(t.startTime.split(':')[1])); if(m<=60) short++; else if(m<=120) medium++; else long++; }); const total = short+medium+long; if(total===0) return; const degS = (short/total)*360, degM = (medium/total)*360, degL = (long/total)*360; const cS = priorities[3].color; const cM = priorities[2].color; const cL = priorities[1].color; document.getElementById('durationPie').style.background = `conic-gradient(${cS} 0deg ${degS}deg, ${cM} ${degS}deg ${degS+degM}deg, ${cL} ${degS+degM}deg 360deg)`; document.getElementById('durationLegend').innerHTML = `<div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cS}"></span>≤1h (${short})</div><div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cM}"></span>1-2h (${medium})</div><div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cL}"></span>>2h (${long})</div>`; }
+        function renderWeeklyChart(data, themeColor) { const container = document.getElementById('weeklyChart'); container.innerHTML = ''; const days = ["周日","周一","周二","周三","周四","周五","周六"]; const counts = new Array(7).fill(0); data.forEach(t => counts[new Date(t.date).getDay()]++); const max = Math.max(...counts, 1); counts.forEach((c, i) => { const pct = (c/max)*100; const col = document.createElement('div'); col.style.cssText = "display:flex; flex-direction:column; align-items:center; height:100%; width:10%; justify-content:flex-end;"; col.innerHTML = `<div style="font-weight:bold; font-size:12px; margin-bottom:5px; color:#333;">${c}</div><div style="width:100%; height:${pct}%; background:${themeColor}; border-radius:4px; opacity:0.8;"></div><div style="margin-top:5px; font-size:11px; color:#666;">${days[i]}</div>`; container.appendChild(col); }); }
+        function renderPeakHoursChart(data, themeColor) { const container = document.getElementById('hoursChart'); container.innerHTML = ''; const hours = new Array(24).fill(0); data.forEach(t => { const sH = parseInt(t.startTime.split(':')[0]); const eH = parseInt(t.endTime.split(':')[0]); for(let i=sH; i<=eH; i++) if(i<24) hours[i]++; }); const max = Math.max(...hours, 1); hours.forEach((count, i) => { const hPct = (count / max) * 100; const bar = document.createElement('div'); bar.style.cssText = `width:3%; background:${count>0?themeColor:'#eee'}; height:${hPct}%; border-radius:2px 2px 0 0; position:relative; min-height:2px;`; if(i%3===0) { const lbl = document.createElement('div'); lbl.innerText = i; lbl.style.cssText = "position:absolute; bottom:-15px; left:0; font-size:9px; color:#999;"; bar.appendChild(lbl); } container.appendChild(bar); }); }
+        function renderTrendChart(data, themeColor) { const canvas = document.getElementById('trendCanvas'); const ctx = canvas.getContext('2d'); const dateMap = {}; data.forEach(t => { if(!dateMap[t.date]) dateMap[t.date] = {sum:0, count:0}; dateMap[t.date].sum += t.progress; dateMap[t.date].count++; }); const dates = Object.keys(dateMap).sort(); const points = dates.map(d => Math.round(dateMap[d].sum / dateMap[d].count)); const w = canvas.parentElement.offsetWidth; const h = canvas.parentElement.offsetHeight; canvas.width = w * 2; canvas.height = h * 2; ctx.scale(2, 2); ctx.clearRect(0,0,w,h); ctx.strokeStyle = "#eee"; ctx.beginPath(); for(let i=0;i<=4;i++) { let y=h-(h*i/4); ctx.moveTo(0,y); ctx.lineTo(w,y); } ctx.stroke(); if(points.length < 2) { ctx.fillStyle = "#999"; ctx.textAlign = "center"; ctx.fillText("数据不足以生成趋势", w/2, h/2); return; } const xStep = w / (points.length - 1); ctx.beginPath(); ctx.strokeStyle = themeColor; ctx.lineWidth = 3; points.forEach((val, i) => { const x = i * xStep; const y = h - (val / 100 * h); if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }); ctx.stroke(); points.forEach((val, i) => { const x = i * xStep; const y = h - (val / 100 * h); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = themeColor; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#333"; ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.fillText(val + "%", x, y - 10); ctx.fillStyle = "#999"; ctx.fillText(dates[i].substring(5), x, h - 5); }); }
+        function renderCatComparison(data) { const container = document.getElementById('catComparisonChart'); container.innerHTML = ''; const stats = {}; categories.forEach(c => stats[c.name] = { total: 0, done: 0 }); data.forEach(t => { if(stats[t.category]) { stats[t.category].total++; if(t.progress === 100) stats[t.category].done++; } }); categories.forEach(c => { const s = stats[c.name]; if(!s || s.total === 0) return; const h2 = (s.done / s.total) * 100; const group = document.createElement('div'); group.style.cssText = "display:flex; flex-direction:column; align-items:center; width:15%; height:100%; justify-content:flex-end; gap:5px;"; group.innerHTML = `<div style="font-size:10px; color:#666;">${s.done}/${s.total}</div><div style="width:100%; height:100px; position:relative; background:#f0f0f0; border-radius:4px;"><div style="position:absolute; bottom:0; width:100%; height:${h2}%; background:${c.color}; border-radius:4px; opacity:0.8;"></div></div><div style="font-size:11px; font-weight:600; color:var(--text-main);">${c.name}</div>`; container.appendChild(group); }); }
+        function renderGaugeChart(data, themeColor) { const canvas = document.getElementById('gaugeCanvas'); const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1; const width = 200, height = 150; canvas.style.width = width + "px"; canvas.style.height = height + "px"; canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); const cx = width/2, cy = height - 20, r = 80; let totalProg = 0, maxProg = data.length * 100; data.forEach(t => totalProg += t.progress); const pct = maxProg > 0 ? totalProg / maxProg : 0; const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim(); ctx.clearRect(0,0,width,height); ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 0); ctx.lineWidth=15; ctx.lineCap="round"; ctx.strokeStyle="#eee"; ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, Math.PI + (Math.PI * Math.max(pct, 0.01))); ctx.lineWidth=15; ctx.lineCap="round"; ctx.strokeStyle=themeColor; ctx.stroke(); ctx.fillStyle=textColor; ctx.font="bold 28px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.textAlign="center"; ctx.fillText(Math.round(pct*100) + "%", cx, cy - 25); ctx.fillStyle="#86868b"; ctx.font="12px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.fillText("总体达成", cx, cy); }
+        function renderPriorityChart(data) { const container = document.getElementById('prioChartArea'); container.innerHTML = ''; const pMap = {}; priorities.forEach(p => pMap[p.val] = { label: p.label, totalCount: 0, totalProg: 0, color: p.color }); data.forEach(t => { if(pMap[t.priority]) { pMap[t.priority].totalCount++; pMap[t.priority].totalProg += t.progress; } }); priorities.forEach(p => { const item = pMap[p.val]; const avg = item.totalCount > 0 ? Math.round(item.totalProg / item.totalCount) : 0; const col = document.createElement('div'); col.className = 'prio-col-group'; col.innerHTML = `<div class="prio-val" style="color:var(--text-main)">${avg}%</div><div class="prio-track"><div class="prio-fill" style="background:${p.color}; height:${avg}%;"></div></div><div class="prio-label">${p.label}</div>`; container.appendChild(col); }); }
+        function drawSplitGantt(data, startDateStr, endDateStr) { const leftC = document.getElementById('ganttLeftCanvas'); const rightC = document.getElementById('ganttRightCanvas'); const leftCtx = leftC.getContext('2d'); const rightCtx = rightC.getContext('2d'); const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim(); const dpr = window.devicePixelRatio || 1; const dateList = []; let curr = new Date(startDateStr); const end = new Date(endDateStr); while(curr <= end) { dateList.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); } if (dateList.length === 0) return; const uniqueTitles = [...new Set(data.map(t => t.title))].sort(); const leftW = 160, dateColW = 80, headerH = 40, rowH = 40; const rightW = dateList.length * dateColW; const totalH = headerH + (uniqueTitles.length * rowH) + 20; leftC.width = leftW * dpr; leftC.height = totalH * dpr; leftC.style.width = leftW + 'px'; leftC.style.height = totalH + 'px'; rightC.width = rightW * dpr; rightC.height = totalH * dpr; rightC.style.width = rightW + 'px'; rightC.style.height = totalH + 'px'; leftCtx.scale(dpr, dpr); rightCtx.scale(dpr, dpr); leftCtx.clearRect(0,0,leftW,totalH); rightCtx.clearRect(0,0,rightW,totalH); leftCtx.fillStyle = "rgba(0,0,0,0.03)"; leftCtx.fillRect(0,0,leftW,headerH); leftCtx.fillStyle = textColor; leftCtx.font = "bold 13px sans-serif"; leftCtx.textAlign = "left"; leftCtx.fillText("计划名称", 10, 25); leftCtx.beginPath(); leftCtx.moveTo(0, headerH); leftCtx.lineTo(leftW, headerH); leftCtx.strokeStyle="#e5e5ea"; leftCtx.stroke(); rightCtx.fillStyle = "rgba(0,0,0,0.03)"; rightCtx.fillRect(0,0,rightW,headerH); rightCtx.font = "11px sans-serif"; rightCtx.textAlign = "center"; dateList.forEach((date, i) => { const x = i * dateColW; const cx = x + dateColW / 2; rightCtx.fillStyle = textColor; rightCtx.fillText(date.substring(5), cx, 25); rightCtx.beginPath(); rightCtx.moveTo(x, 0); rightCtx.lineTo(x, totalH); rightCtx.strokeStyle = "#e5e5ea"; rightCtx.stroke(); }); rightCtx.beginPath(); rightCtx.moveTo(0, headerH); rightCtx.lineTo(rightW, headerH); rightCtx.stroke(); uniqueTitles.forEach((title, rowIndex) => { const y = headerH + (rowIndex * rowH); if(rowIndex % 2 === 0) { leftCtx.fillStyle = "rgba(0,0,0,0.02)"; leftCtx.fillRect(0, y, leftW, rowH); rightCtx.fillStyle = "rgba(0,0,0,0.02)"; rightCtx.fillRect(0, y, rightW, rowH); } leftCtx.fillStyle = textColor; leftCtx.textAlign = "left"; leftCtx.font = "12px sans-serif"; let displayTitle = title; if(displayTitle.length > 12) displayTitle = displayTitle.substring(0, 10) + ".."; leftCtx.fillText(displayTitle, 10, y + 25); leftCtx.beginPath(); leftCtx.moveTo(0, y+rowH); leftCtx.lineTo(leftW, y+rowH); leftCtx.strokeStyle="#f0f0f0"; leftCtx.stroke(); let tasksForTitle = data.filter(t => t.title === title); tasksForTitle.sort((a,b) => a.date.localeCompare(b.date)); let ranges = []; if(tasksForTitle.length > 0) { let currentRange = null; tasksForTitle.forEach(t => { const dIdx = dateList.indexOf(t.date); if(dIdx === -1) return; if(!currentRange) { currentRange = { start: dIdx, end: dIdx, progressSum: t.progress, count: 1, category: t.category }; } else { if (dIdx === currentRange.end + 1) { currentRange.end = dIdx; currentRange.progressSum += t.progress; currentRange.count++; } else { ranges.push(currentRange); currentRange = { start: dIdx, end: dIdx, progressSum: t.progress, count: 1, category: t.category }; } } }); if(currentRange) ranges.push(currentRange); } ranges.forEach(r => { const xStart = r.start * dateColW; const blockWidth = (r.end - r.start + 1) * dateColW; const marginX = 4; const barH = 32; const barY = y + (rowH - barH)/2; const radius = 8; const drawX = xStart + marginX; const drawW = blockWidth - (marginX * 2); const c = getColor(r.category); rightCtx.fillStyle = c; roundRect(rightCtx, drawX, barY, drawW, barH, radius); const fillRatio = r.progressSum / (r.count * 100); if(fillRatio > 0) { const fillW = drawW * fillRatio; const safeRadius = Math.min(radius, fillW/2); if (fillW > 0) { rightCtx.fillStyle = "rgba(255,255,255,0.4)"; roundRect(rightCtx, drawX, barY, fillW, barH, safeRadius); } } }); rightCtx.beginPath(); rightCtx.moveTo(0, y+rowH); rightCtx.lineTo(rightW, y+rowH); rightCtx.strokeStyle="#f0f0f0"; rightCtx.stroke(); }); }
+        function renderDetailedTable(data) { const tbody = document.getElementById('reviewTableBody'); tbody.innerHTML = ''; if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">无数据</td></tr>'; return; } const map = new Map(); data.forEach(t => { const key = t.title + '|' + t.category; if(!map.has(key)) map.set(key, { title: t.title, category: t.category, count: 0, doneCount: 0, totalProg: 0 }); const item = map.get(key); item.count++; if(t.progress === 100) item.doneCount++; item.totalProg += t.progress; }); map.forEach(item => { const avgProg = Math.round(item.totalProg / item.count); const c = getColor(item.category); const completionRate = Math.round(item.totalProg / (item.count * 100) * 100); const tr = document.createElement('tr'); tr.innerHTML = `<td><span style="color:${c}; font-weight:bold;">${item.category}</span></td><td>${item.title}</td><td>${item.count} 次</td><td><div style="display:flex; align-items:center; gap:8px;"><div class="table-prog-bar"><div class="table-prog-fill" style="width:${completionRate}%; background:${c};"></div></div><span style="font-size:11px; font-weight:600; color:#666;">${completionRate}%</span></div></td><td><span class="avg-badge">${avgProg}%</span></td>`; tbody.appendChild(tr); }); }
+        function filterReviewTable() { const statusFilter = document.getElementById('reviewStatusFilter').value; const catFilter = document.getElementById('reviewCatFilter').value; const prioFilter = document.getElementById('reviewPrioFilter').value; const filteredData = currentReviewData.filter(t => { if(statusFilter === 'completed' && t.progress < 100) return false; if(statusFilter === 'incomplete' && t.progress === 100) return false; if(catFilter !== 'all' && t.category !== catFilter) return false; if(prioFilter !== 'all' && t.priority !== prioFilter) return false; return true; }); renderDetailedTable(filteredData); }
+        function renderEisenhowerChart(data, themeColor) { const canvas = document.getElementById('eisenhowerCanvas'); const tooltip = document.getElementById('quadrantTooltip'); const container = document.getElementById('eisenhowerContainer'); const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1; const w = container.clientWidth, h = container.clientHeight; canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr); ctx.clearRect(0,0,w,h); quadrantDots = []; const today = new Date(); today.setHours(0,0,0,0); const prioMap = { 'lowest': 1, 'low': 2, 'medium': 3, 'high': 4, 'highest': 5 }; data.forEach(t => { const pVal = prioMap[t.priority] || 3; const bandWidth = 0.16; const startXFactor = 0.1 + (pVal - 1) * bandWidth; const normX = startXFactor + (Math.random() * bandWidth); const x = w * normX; const tDate = new Date(t.date); const diffTime = tDate - today; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); let urgencyFactor = 1 - (diffDays / 30); if (urgencyFactor < 0) urgencyFactor = 0; if (urgencyFactor > 1) urgencyFactor = 1; const y = (h * 0.1) + ((1 - urgencyFactor) * (h * 0.8)) + (Math.random()*20 - 10); const c = getColor(t.category); ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); quadrantDots.push({ x, y, r: 6, title: t.title, category: t.category }); }); canvas.onmousemove = function(e) { const rect = canvas.getBoundingClientRect(); const mx = e.clientX - rect.left; const my = e.clientY - rect.top; let found = null; for(let dot of quadrantDots) { const dx = mx - dot.x; const dy = my - dot.y; if(Math.sqrt(dx*dx + dy*dy) <= dot.r + 2) { found = dot; break; } } if(found) { tooltip.style.display = 'block'; tooltip.style.left = (mx + 10) + 'px'; tooltip.style.top = (my + 10) + 'px'; tooltip.innerHTML = `<strong>${found.title}</strong><br><span style="color:#ccc">${found.category}</span>`; canvas.style.cursor = 'pointer'; } else { tooltip.style.display = 'none'; canvas.style.cursor = 'default'; } }; canvas.onmouseleave = () => { tooltip.style.display = 'none'; }; }
+        function renderRadarChart(data, themeColor, startDateStr, endDateStr) { const canvas = document.getElementById('radarChartCanvas'); const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1; const w = 250, h = 250; canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.width = w + 'px'; canvas.style.height = h + 'px'; ctx.scale(dpr, dpr); const cx = w/2, cy = h/2, r = 80; const completion = data.reduce((acc, t) => acc + t.progress, 0) / data.length || 0; let totalTaskMinutes = 0; data.forEach(t => { const sP = t.startTime.split(':'), eP = t.endTime.split(':'); const m = (parseInt(eP[0])*60 + parseInt(eP[1])) - (parseInt(sP[0])*60 + parseInt(sP[1])); if(m > 0) totalTaskMinutes += m; }); const sDate = new Date(startDateStr), eDate = new Date(endDateStr); const dayCount = Math.floor((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1; const diligenceScore = Math.min((totalTaskMinutes / (dayCount * 8 * 60)) * 100, 100); const highPrioCount = data.filter(t => t.priority === 'highest' || t.priority === 'high').length; const importanceScore = (highPrioCount / data.length) * 100 || 0; const longTaskCount = data.filter(t => { const min = (parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1])); return min > 60; }).length; const focusScore = (longTaskCount / data.length) * 100 || 0; const catsUsed = new Set(data.map(t => t.category)).size; const balanceScore = Math.min((catsUsed / categories.length) * 100, 100); const scores = [completion, diligenceScore, importanceScore, focusScore, balanceScore]; const labels = ["完成率", "勤奋度", "重要性", "专注度", "平衡性"]; ctx.clearRect(0,0,w,h); ctx.strokeStyle = "#e5e5ea"; ctx.lineWidth = 1; for(let level=1; level<=4; level++) { ctx.beginPath(); for(let i=0; i<5; i++) { const angle = (Math.PI*2 * i)/5 - Math.PI/2; const radius = (r/4)*level; const x = cx + Math.cos(angle)*radius; const y = cy + Math.sin(angle)*radius; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.stroke(); } ctx.strokeStyle = "#ddd"; for(let i=0; i<5; i++) { const angle = (Math.PI*2 * i)/5 - Math.PI/2; const x = cx + Math.cos(angle)*r, y = cy + Math.sin(angle)*r; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke(); const lx = cx + Math.cos(angle)*(r+20), ly = cy + Math.sin(angle)*(r+20); ctx.fillStyle = "#666"; ctx.font = "10px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(labels[i], lx, ly); } ctx.beginPath(); for(let i=0; i<5; i++) { const angle = (Math.PI*2 * i)/5 - Math.PI/2; const radius = (scores[i]/100)*r; const x = cx + Math.cos(angle)*radius, y = cy + Math.sin(angle)*radius; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.fillStyle = themeColor + "40"; ctx.fill(); ctx.strokeStyle = themeColor; ctx.lineWidth=2; ctx.stroke(); }
+    </script>
+</body>
+</html>
