@@ -80,7 +80,7 @@
         .nav-folder:hover { background: var(--theme-light); color: var(--theme-color); }
         .folder-arrow { font-size: 12px; opacity: 0.5; font-family: monospace; }
         
-        /* 修改点：返回按钮悬停效果 */
+        /* 返回按钮悬停效果 */
         .nav-back-btn {
             padding: 12px 15px; cursor: pointer; font-size: 13px; color: var(--text-secondary);
             margin-bottom: 10px; display: flex; align-items: center; gap: 5px; font-weight: 600;
@@ -98,7 +98,7 @@
         .mbti-badge { width: 50px; height: 50px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--theme-color); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; position: relative; margin-top: 10px; }
         .mbti-badge:hover { transform: scale(1.1); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
 
-        /* ==================== 3. 基础组件 (保持不变) ==================== */
+        /* ==================== 3. 基础组件 ==================== */
         .form-card { background: var(--card-bg); padding: 30px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm); max-width: 800px; }
         .compact-row { display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; }
         label { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px; }
@@ -135,7 +135,7 @@
         .reminder-options { margin-top: 15px; padding: 15px; background: var(--bg-color); border-radius: 8px; display: none; border: 1px solid var(--border); animation: slideDown 0.2s ease-out; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ==================== 4. 计划执行 & 日历优化 (保持不变) ==================== */
+        /* ==================== 4. 计划执行 & 日历优化 ==================== */
         .calendar-layout-row { display: flex; gap: 25px; align-items: flex-start; margin-bottom: 30px; }
         .calendar-wrapper { flex: 1; min-width: 0; background: var(--card-bg); border-radius: var(--radius-card); padding: 30px; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); border: 1px solid var(--border); height: fit-content; }
         .calendar-week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; text-align: center; margin-bottom: 15px; }
@@ -352,11 +352,21 @@
         .level-req { font-size: 11px; font-weight: 600; color: var(--theme-color); background: var(--theme-light); padding: 4px 8px; border-radius: 6px; display: inline-block; }
 
         /* ==================== 10. 响应式适配 (Mobile & Responsive) ==================== */
+        
+        /* 新增：报表筛选栏适配样式 */
+        .report-filter-card { padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .filter-date-row { display: flex; align-items: center; gap: 10px; }
+        .report-filter-card input[type="date"] { width: auto; margin: 0; }
+        .report-filter-card .btn { margin-left: auto; }
+
         @media (max-width: 900px) {
             body { height: auto; min-height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
             .app-container { display: block; height: auto; min-height: 100vh; }
             .sidebar { position: fixed; top: 0; left: 0; bottom: 0; height: 100%; width: 260px; transform: translateX(0); margin-left: 0; box-shadow: 2px 0 20px rgba(0,0,0,0.1); transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); }
             .sidebar.closed { transform: translateX(-100%); margin-left: 0; opacity: 1; }
+            /* 修改点：固定菜单按钮在左上角 */
+            .toggle-btn { position: fixed; top: 20px; left: 20px; }
+            
             .main-content { width: 100%; margin-left: 0; padding: 15px; padding-top: 60px; height: auto; overflow: visible; }
             .page-header { font-size: 24px; margin-bottom: 15px; }
             .form-card { padding: 20px; }
@@ -389,6 +399,13 @@
             /* Gamification Mobile */
             .level-split-view { flex-direction: column; }
             .level-left-col { width: 100%; }
+
+            /* 修改点：报表筛选栏手机端适配 */
+            .report-filter-card { flex-direction: column; align-items: stretch; gap: 10px; }
+            .filter-date-row { justify-content: space-between; gap: 5px; }
+            .report-filter-card input[type="date"] { width: 100%; }
+            .report-filter-card .btn { margin-left: 0; width: 100%; }
+            .report-filter-card label { margin-bottom: 0; }
         }
 
     </style>
@@ -626,10 +643,12 @@
             <div id="view-summary" class="view-section">
                 <h1 class="page-header">计划复盘及总结</h1>
                 
-                <div class="form-card" style="padding:15px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                <div class="form-card report-filter-card">
                     <label>统计区间 (默认为本月)：</label>
-                    <input type="date" id="sumStart" style="width:auto; margin:0;"> 至 <input type="date" id="sumEnd" style="width:auto; margin:0;">
-                    <button class="btn btn-primary" onclick="renderSummary()" style="margin-left:auto;">分析数据</button>
+                    <div class="filter-date-row">
+                        <input type="date" id="sumStart"> <span>至</span> <input type="date" id="sumEnd">
+                    </div>
+                    <button class="btn btn-primary" onclick="renderSummary()">分析数据</button>
                 </div>
 
                 <div class="chart-grid" style="margin-bottom:20px;">
@@ -766,10 +785,12 @@
             <div id="view-moodreport" class="view-section">
                 <h1 class="page-header">情绪跟踪报表</h1>
                 
-                <div class="form-card" style="padding:15px; display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                <div class="form-card report-filter-card">
                     <label>统计区间 (默认为本月)：</label>
-                    <input type="date" id="moodReportStart" style="width:auto; margin:0;"> 至 <input type="date" id="moodReportEnd" style="width:auto; margin:0;">
-                    <button class="btn btn-primary" onclick="renderMoodReport()" style="margin-left:auto;">生成报表</button>
+                    <div class="filter-date-row">
+                        <input type="date" id="moodReportStart"> <span>至</span> <input type="date" id="moodReportEnd">
+                    </div>
+                    <button class="btn btn-primary" onclick="renderMoodReport()">生成报表</button>
                 </div>
 
                 <div class="chart-grid" style="margin-bottom:20px;">
