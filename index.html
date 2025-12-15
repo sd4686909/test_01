@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Daily Sense - V27 Gamification</title>
+    <title>Daily Sense - V27 Gamification (Mobile Final)</title>
     <style>
         /* ==================== 1. 核心视觉样式 (保持不变) ==================== */
         :root {
@@ -44,19 +44,18 @@
         /* ==================== 2. 布局 ==================== */
         .app-container { display: flex; height: 100vh; position: relative; }
 
-        /* --- 修改后的侧边栏样式 (Sliding Menu) --- */
+        /* PC Sidebar */
         .sidebar {
             width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
             padding-top: 60px; display: flex; flex-direction: column; transition: 0.3s var(--ease);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); flex-shrink: 0; z-index: 20;
-            position: relative; overflow: hidden; /* Important for sliding */
+            position: relative; overflow: hidden;
         }
         .sidebar.closed { margin-left: -240px; opacity: 0; }
         .toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 30; cursor: pointer; padding: 8px; background: var(--card-bg); border-radius: 8px; box-shadow: var(--shadow-sm); }
         .bar { width: 18px; height: 2px; background: var(--text-main); margin-bottom: 4px; border-radius: 2px; } .bar:last-child { margin: 0; }
         .logo { font-family: var(--font-head); font-size: 20px; font-weight: 800; padding: 0 25px; margin-bottom: 30px; letter-spacing: -0.5px; color: var(--text-main); }
 
-        /* Sliding Container */
         .sidebar-slider {
             display: flex; width: 200%; transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
             flex: 1; overflow-y: auto; overflow-x: hidden;
@@ -64,7 +63,6 @@
         .menu-level { width: 50%; display: flex; flex-direction: column; padding: 0 10px; flex-shrink: 0; }
         .sidebar.sub-active .sidebar-slider { transform: translateX(-50%); }
 
-        /* 统一菜单项样式 */
         .nav-item-base {
             padding: 12px 15px; cursor: pointer; font-size: 14px; color: var(--text-secondary);
             margin: 4px 0; border-radius: 8px; transition: 0.2s; font-weight: 500; display: flex; align-items: center; justify-content: space-between;
@@ -73,14 +71,10 @@
         .nav-item-base.active { background: var(--theme-color); color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-weight: 600; }
         .nav-item-base.active:hover { opacity: 0.9; }
         
-        /* 文件夹类型 (执行、分析) */
-        .nav-folder {
-            color: var(--text-secondary); /* 统一颜色 */
-        }
+        .nav-folder { color: var(--text-secondary); }
         .nav-folder:hover { background: var(--theme-light); color: var(--theme-color); }
         .folder-arrow { font-size: 12px; opacity: 0.5; font-family: monospace; }
         
-        /* 返回按钮悬停效果 */
         .nav-back-btn {
             padding: 12px 15px; cursor: pointer; font-size: 13px; color: var(--text-secondary);
             margin-bottom: 10px; display: flex; align-items: center; gap: 5px; font-weight: 600;
@@ -93,7 +87,6 @@
         .view-section.active-view { display: block; opacity: 1; transform: scale(1); }
         .page-header { font-family: var(--font-head); font-size: 28px; font-weight: 700; margin-bottom: 20px; color: var(--text-main); }
 
-        /* MBTI Badge */
         .mbti-badge-container { margin-top: auto; padding-bottom: 30px; display: flex; justify-content: flex-start; padding-left: 25px; }
         .mbti-badge { width: 50px; height: 50px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--theme-color); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; position: relative; margin-top: 10px; }
         .mbti-badge:hover { transform: scale(1.1); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
@@ -125,7 +118,6 @@
         .theme-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: var(--text-main); }
         .theme-desc { font-size: 12px; color: var(--text-secondary); }
 
-        /* Switch */
         .switch-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .switch-input { display: none; }
         .switch-track { width: 44px; height: 24px; background: var(--border); border-radius: 12px; position: relative; transition: 0.3s; }
@@ -194,7 +186,7 @@
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 18px; width: 18px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.25); border: 0.5px solid rgba(0,0,0,0.04); transition: transform 0.1s; }
         input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.1); cursor: grabbing; }
 
-        /* ==================== 5. 图表与复盘 (保持不变) ==================== */
+        /* ==================== 5. 图表与复盘 ==================== */
         .gantt-container { display: flex; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); overflow: hidden; margin-top: 15px; }
         .gantt-left { flex: 0 0 160px; border-right: 1px solid var(--border); background: var(--card-bg); z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
         .gantt-right { flex: 1; overflow-x: auto; background: var(--card-bg); }
@@ -246,15 +238,15 @@
         .chart-header { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
         .chart-header h3 { margin: 0; font-size: 16px; font-family: var(--font-head); font-weight: 700; color: var(--text-main); }
         .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--text-secondary); color: var(--text-secondary); font-size: 11px; font-weight:bold; cursor: help; position: relative; flex-shrink: 0; transition: 0.2s; }
-        .info-icon:hover { color: var(--theme-color); border-color: var(--theme-color); background: var(--theme-light); }
+        .info-icon:hover, .info-icon.active { color: var(--theme-color); border-color: var(--theme-color); background: var(--theme-light); }
         .info-tooltip { visibility: hidden; position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%); width: 280px; background: rgba(0,0,0,0.9); color: #fff; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.6; font-weight: 400; text-align: left; opacity: 0; transition: 0.2s; pointer-events: none; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .info-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: rgba(0,0,0,0.9) transparent transparent transparent; }
-        .info-icon:hover .info-tooltip { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-5px); }
+        .info-icon:hover .info-tooltip, .info-icon.active .info-tooltip { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-5px); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; }
         .modal-box { background: var(--card-bg); padding: 25px; border-radius: 16px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 
-        /* ==================== 6. 计划池 (Plan Pool) 样式 (保持不变) ==================== */
+        /* ==================== 6. 计划池 (Plan Pool) ==================== */
         .my-plans-container { display: flex; flex-direction: column; gap: 20px; }
         .my-plans-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 20px; }
         .view-select { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; background: var(--card-bg); color: var(--text-main); font-weight: 600; cursor: pointer; width: auto; min-width: unset; }
@@ -309,11 +301,10 @@
         .heatmap-cell { aspect-ratio: 1; border-radius: 4px; background: var(--bg-color); position: relative; font-size: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
         .heatmap-cell.has-data { color: #fff; font-weight: bold; }
 
-        /* ==================== 9. 晋级之路 (Gamification) - 重构后样式 ==================== */
+        /* ==================== 9. 晋级之路 ==================== */
         .level-split-view { display: flex; gap: 30px; align-items: flex-start; }
         .level-left-col { width: 320px; flex-shrink: 0; }
         .level-right-col { flex: 1; min-width: 0; }
-
         .level-header-card { width: 100%; background: linear-gradient(135deg, var(--theme-color) 0%, var(--shade-2) 100%); padding: 30px; border-radius: 24px; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 25px; text-align: center; position: relative; overflow: hidden; }
         .level-header-card::before { content: ''; position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none; }
         .level-header-card::after { content: ''; position: absolute; bottom: -30px; right: -30px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: none; }
@@ -326,7 +317,6 @@
         .xp-bar-container { background: rgba(0,0,0,0.2); height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0; width: 100%; max-width: 300px; display: inline-block; }
         .xp-bar-fill { height: 100%; background: #fff; width: 0%; transition: width 1s ease-out; }
         .xp-text { font-size: 12px; opacity: 0.9; }
-
         .xp-calendar-card { background: var(--card-bg); border-radius: var(--radius-card); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .xp-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
         .xp-day { height: 36px; border-radius: 8px; background: var(--bg-color); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: default; border: 1px solid transparent; position: relative; }
@@ -337,7 +327,6 @@
         .xp-day.special.can-claim { background: #fff9e0; border-color: #ffcc00; }
         .xp-day.special.can-claim:hover { background: #ffcc00; color: #fff; }
         .xp-badge { position: absolute; top: -5px; right: -5px; background: #ff3b30; color: #fff; font-size: 8px; padding: 2px 4px; border-radius: 6px; transform: scale(0.8); }
-
         .level-timeline { position: relative; width: 100%; max-width: 600px; margin: 0 auto; padding-left: 30px; padding-top: 10px; }
         .level-timeline::before { content: ''; position: absolute; top: 0; bottom: 0; left: 14px; width: 2px; background: var(--border); border-radius: 1px; }
         .level-node { position: relative; margin-bottom: 40px; padding-left: 30px; opacity: 0.5; filter: grayscale(1); transition: 0.3s; }
@@ -345,35 +334,92 @@
         .level-marker { position: absolute; left: 6px; top: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--bg-color); border: 4px solid var(--text-secondary); z-index: 2; transform: translateX(-50%); transition: 0.3s; }
         .level-node.unlocked .level-marker { border-color: var(--theme-color); background: var(--card-bg); box-shadow: 0 0 0 4px var(--theme-light); }
         .level-node.active .level-marker { background: var(--theme-color); border-color: var(--theme-color); transform: translateX(-50%) scale(1.2); }
-        
         .level-info { background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .level-name { font-weight: 700; font-size: 16px; margin-bottom: 5px; color: var(--text-main); }
         .level-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
         .level-req { font-size: 11px; font-weight: 600; color: var(--theme-color); background: var(--theme-light); padding: 4px 8px; border-radius: 6px; display: inline-block; }
 
-        /* ==================== 10. 响应式适配 (Mobile & Responsive) ==================== */
-        
-        /* 新增：报表筛选栏适配样式 */
         .report-filter-card { padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
         .filter-date-row { display: flex; align-items: center; gap: 10px; }
         .report-filter-card input[type="date"] { width: auto; margin: 0; }
         .report-filter-card .btn { margin-left: auto; }
 
+        /* ==================== 10. 手机端适配逻辑 ==================== */
+        
+        .mobile-bottom-nav { display: none; } /* PC端隐藏 */
+        .mobile-analysis-tabs { display: none; } /* PC端隐藏 */
+
         @media (max-width: 900px) {
-            body { height: auto; min-height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-            .app-container { display: block; height: auto; min-height: 100vh; }
-            .sidebar { position: fixed; top: 0; left: 0; bottom: 0; height: 100%; width: 260px; transform: translateX(0); margin-left: 0; box-shadow: 2px 0 20px rgba(0,0,0,0.1); transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); }
-            .sidebar.closed { transform: translateX(-100%); margin-left: 0; opacity: 1; }
-            /* 修改点：固定菜单按钮在左上角 */
-            .toggle-btn { position: fixed; top: 20px; left: 20px; }
-            
-            .main-content { width: 100%; margin-left: 0; padding: 15px; padding-top: 60px; height: auto; overflow: visible; }
+            /* 1. 隐藏PC端侧边栏和汉堡按钮 */
+            .sidebar, .toggle-btn, .mbti-badge-container { display: none !important; }
+
+            /* 2. 布局调整 */
+            .app-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+            .main-content {
+                width: 100%; margin: 0; padding: 10px 15px 100px 15px; /* 底部留白给导航栏 */
+                height: 100vh; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+            }
             .page-header { font-size: 24px; margin-bottom: 15px; }
+
+            /* 3. 手机端底部导航栏 */
+            .mobile-bottom-nav {
+                display: flex; position: fixed; bottom: 0; left: 0; width: 100%;
+                background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border-top: 1px solid var(--border); z-index: 1000; height: 60px;
+                align-items: center; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+            }
+            .mobile-nav-item {
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                flex: 1; height: 100%; color: var(--text-secondary); cursor: pointer; font-size: 10px; gap: 4px;
+            }
+            .mobile-nav-item.active { color: var(--theme-color); font-weight: 600; }
+            .mobile-nav-icon { font-size: 20px; margin-bottom: 0; }
+            
+            /* 中间凸起的添加按钮 */
+            .mobile-nav-add-btn {
+                width: 48px; height: 48px; background: var(--theme-color); border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; color: #fff;
+                font-size: 24px; box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+                transform: translateY(-20px); border: 4px solid var(--bg-color);
+            }
+
+            /* 4. 手机端“分析”模块顶部二级导航 */
+            .mobile-analysis-tabs {
+                display: flex; gap: 10px; padding: 10px 0 15px 0;
+                overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;
+                margin-bottom: 10px; flex-shrink: 0; width: 100%;
+            }
+            .mobile-analysis-tabs.hidden { display: none; }
+            .analysis-tab-item {
+                padding: 6px 16px; background: var(--card-bg); border-radius: 20px;
+                font-size: 13px; color: var(--text-secondary); font-weight: 600;
+                box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: 0.2s;
+                flex-shrink: 0;
+            }
+            .analysis-tab-item.active {
+                background: var(--text-main); color: #fff; border-color: transparent;
+            }
+
+            /* 5. 组件适配 */
             .form-card { padding: 20px; }
             .compact-row { flex-direction: column; gap: 10px; margin-bottom: 15px; }
             .calendar-layout-row { flex-direction: column; gap: 20px; }
-            /* 修改点：移动端日历宽度修复 */
-            .calendar-wrapper { width: 100%; }
+            .calendar-wrapper { width: 100%; padding: 15px; }
+            
+            /* 日历展示优化：确保点点和进度条可见，缩小字体 */
+            .cal-day { height: auto; min-height: 55px; aspect-ratio: unset; padding: 2px; border-radius: 8px; }
+            .cal-date-num { width: 20px; height: 20px; font-size: 12px; margin: 2px; }
+            .cal-day-content { gap: 2px; }
+            .cal-day-prog-track { height: 4px; border-radius: 2px; }
+            .cal-day-pct { font-size: 8px; margin-right: 1px; }
+            .cal-dots-row { gap: 1px; margin-top: 2px; }
+            .cal-dot { width: 3px; height: 3px; }
+            
+            /* 排序栏适配：缩小字体，不换行 */
+            .sort-bar { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; gap: 5px; }
+            .sort-btn { font-size: 10px; padding: 4px 8px; flex-shrink: 0; }
+            .sort-label { font-size: 11px; white-space: nowrap; }
 
             .mood-engine-column-right { width: 100%; min-width: 0; }
             .timeline-row { gap: 10px; }
@@ -381,12 +427,12 @@
             .t-start { font-size: 13px; } .t-end { font-size: 11px; }
             .task-card { height: auto; flex-direction: column; align-items: stretch; gap: 10px; padding: 15px; }
             .task-right { width: 100%; border-left: none; border-top: 1px solid var(--bg-color); padding-left: 0; padding-top: 10px; }
-            .cal-day { height: 60px; border-radius: 10px; padding: 4px; }
-            .cal-date-num { width: 24px; height: 24px; font-size: 14px; margin: 2px; }
-            .cal-day-content { gap: 2px; } .cal-day-pct { font-size: 9px; }
-            .cal-dots-row { gap: 2px; } .cal-dot { width: 4px; height: 4px; }
+            
+            /* 图表与复盘宽宽统一 */
             .chart-grid { grid-template-columns: 1fr; gap: 15px; }
-            .summary-card { padding: 15px; }
+            .summary-card { padding: 15px; width: 100% !important; margin: 0 !important; }
+            .mood-card { width: 100% !important; }
+
             .my-plans-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
             .search-bar { max-width: 100%; margin-left: 0; }
             .date-range-group { justify-content: center; }
@@ -396,28 +442,31 @@
             .date-picker-wrapper { padding: 10px; }
             .picker-day { height: 32px; font-size: 13px; }
             
-            /* Gamification Mobile */
             .level-split-view { flex-direction: column; }
             .level-left-col { width: 100%; }
 
-            /* 修改点：报表筛选栏手机端适配 */
             .report-filter-card { flex-direction: column; align-items: stretch; gap: 10px; }
             .filter-date-row { justify-content: space-between; gap: 5px; }
             .report-filter-card input[type="date"] { width: 100%; }
             .report-filter-card .btn { margin-left: 0; width: 100%; }
             .report-filter-card label { margin-bottom: 0; }
+
+            /* Tooltip 手机端位置调整 */
+            .info-tooltip { width: 200px; bottom: auto; top: 120%; left: auto; right: 0; transform: none; }
+            .info-tooltip::after { top: auto; bottom: 100%; left: auto; right: 10px; border-color: transparent transparent rgba(0,0,0,0.9) transparent; }
         }
 
     </style>
 </head>
 <body>
 
+    <!-- PC端 Toggle Button (手机端隐藏) -->
     <div class="toggle-btn" onclick="document.getElementById('sidebar').classList.toggle('closed')">
         <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
 
     <div class="app-container">
-        <!-- Sidebar with Sliding Logic -->
+        <!-- Sidebar (PC Only) -->
         <aside class="sidebar closed" id="sidebar">
             <div class="logo">Daily Sense.</div>
             
@@ -465,6 +514,14 @@
 
         <main class="main-content">
             
+            <!-- Mobile Analysis Tabs (手机端 "分析" 模块的顶部导航) -->
+            <div class="mobile-analysis-tabs hidden" id="mobileAnalysisTabs">
+                <div class="analysis-tab-item" onclick="switchView('summary')" id="mtab-summary">计划复盘及总结</div>
+                <div class="analysis-tab-item" onclick="switchView('moodreport')" id="mtab-moodreport">情绪跟踪报表</div>
+                <div class="analysis-tab-item" onclick="switchView('myplans')" id="mtab-myplans">计划池</div>
+                <div class="analysis-tab-item" onclick="switchView('levelup')" id="mtab-levelup">我的晋级之路</div>
+            </div>
+
             <!-- 1. 添加计划 -->
             <div id="view-add" class="view-section active-view">
                 <h1 class="page-header">添加计划</h1>
@@ -854,7 +911,6 @@
                     </div>
                 </div>
 
-                <!-- 修改点：情绪词云放到底部 -->
                 <div class="summary-card" style="margin-bottom:20px; margin-top:20px;">
                     <div class="chart-header">
                         <h3>情绪词云</h3>
@@ -864,7 +920,7 @@
                 </div>
             </div>
 
-            <!-- 新增：我的晋级之路 (左右分栏 + 日历 + 新XP规则) -->
+            <!-- 新增：我的晋级之路 -->
             <div id="view-levelup" class="view-section">
                 <h1 class="page-header">我的晋级之路</h1>
                 
@@ -882,7 +938,6 @@
                         
                         <div class="xp-calendar-card">
                             <div class="chart-header">
-                                <!-- 修改点：标题修改 -->
                                 <h3>每日领取经验值</h3>
                                 <div class="info-icon">i<div class="info-tooltip">
                                     每天领取经验值，持续升级你的等级。<br>等级提升后，除了会展示更酷的 LV 标识，还可享受更多高级的 VIP 特权。
@@ -967,7 +1022,31 @@
         </main>
     </div>
 
-    <!-- Modals (Edit & Quick Add) (保持不变) -->
+    <!-- Mobile Bottom Navigation (手机端显示) -->
+    <div class="mobile-bottom-nav">
+        <div class="mobile-nav-item" onclick="switchView('calendar')" id="mnav-calendar">
+            <div class="mobile-nav-icon">📅</div>
+            <div>执行</div>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('summary')" id="mnav-summary">
+            <div class="mobile-nav-icon">📊</div>
+            <div>分析</div>
+        </div>
+        <!-- Center Add Button -->
+        <div class="mobile-nav-add-btn" onclick="switchView('add')">
+            <span>+</span>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('category')" id="mnav-custom">
+            <div class="mobile-nav-icon">⚙️</div>
+            <div>自定义</div>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('mbti')" id="mnav-mbti">
+            <div class="mobile-nav-icon">🧠</div>
+            <div>性格</div>
+        </div>
+    </div>
+
+    <!-- Modals -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-bottom:15px; font-family:var(--font-head); font-weight:700;">修改计划</h3>
@@ -1024,7 +1103,9 @@
         let pickerDate = new Date(), calDate = new Date(), selectedDates = new Set(), pickerMode = 'single', sortMode = 'time', currentReviewData = [], quadrantDots = [], selectedPlanIds = new Set(), isBulkMode = false;
 
         document.addEventListener('DOMContentLoaded', () => {
+            // PC Sidebar check
             if(window.innerWidth > 900) { document.getElementById('sidebar').classList.remove('closed'); } else { document.getElementById('sidebar').classList.add('closed'); }
+            
             const savedTheme = localStorage.getItem('dailySenseTheme') || 'default';
             document.documentElement.setAttribute('data-theme', savedTheme);
             document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active'));
@@ -1040,9 +1121,30 @@
             renderMbtiSection();
             requestNotificationPermission();
             setInterval(scheduleNotifications, 30000);
+
+            // === 手机端初始化逻辑 ===
+            if (window.innerWidth <= 900) {
+                // 手机端默认进入“计划执行”界面
+                switchView('calendar');
+                
+                // 手机端 Tooltip 点击支持
+                document.body.addEventListener('click', function(e) {
+                    if (e.target.closest('.info-icon')) {
+                        const icon = e.target.closest('.info-icon');
+                        // 移除其他激活的
+                        document.querySelectorAll('.info-icon.active').forEach(el => {
+                            if(el !== icon) el.classList.remove('active');
+                        });
+                        icon.classList.toggle('active');
+                    } else {
+                        // 点击空白处关闭
+                        document.querySelectorAll('.info-icon.active').forEach(el => el.classList.remove('active'));
+                    }
+                });
+            }
         });
 
-        // ==================== Sidebar Navigation Logic (New Sliding) ====================
+        // ==================== Sidebar Navigation Logic ====================
         const subMenus = {
             'exec': [
                 { name: '计划执行', view: 'calendar' },
@@ -1073,8 +1175,6 @@
             });
 
             sidebar.classList.add('sub-active');
-
-            // 修改点：自动跳转到第一个子菜单
             if(menuId === 'exec') switchView('calendar');
             if(menuId === 'analysis') switchView('summary');
         }
@@ -1088,13 +1188,14 @@
             const target = document.getElementById('view-' + viewName);
             if(target) { target.style.display = 'block'; setTimeout(() => target.classList.add('active-view'), 10); }
             
-            // Update Active States in Sidebar
+            // Update Active States in Sidebar (PC)
             document.querySelectorAll('.nav-item-base').forEach(el => el.classList.remove('active'));
 
             if(viewName === 'add') document.getElementById('nav-add').classList.add('active');
             if(viewName === 'category') document.getElementById('nav-category').classList.add('active');
             if(viewName === 'mbti') document.getElementById('nav-mbti').classList.add('active');
 
+            // PC Sub-menu Logic
             if(['calendar', 'myplans'].includes(viewName)) {
                 // We are in Exec group
                 const subContent = document.getElementById('sub-menu-content');
@@ -1116,8 +1217,32 @@
                 }
             }
 
-            if(window.innerWidth <= 900) { document.getElementById('sidebar').classList.add('closed'); }
+            // === Mobile Navigation Logic ===
+            // 1. Bottom Nav Active State
+            document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+            if(viewName === 'calendar') document.getElementById('mnav-calendar').classList.add('active');
+            if(viewName === 'category') document.getElementById('mnav-custom').classList.add('active');
+            if(viewName === 'mbti') document.getElementById('mnav-mbti').classList.add('active');
+            
+            // "Analysis" Group Handling for Mobile
+            const isAnalysisGroup = ['summary', 'moodreport', 'myplans', 'levelup'].includes(viewName);
+            const mobileTabs = document.getElementById('mobileAnalysisTabs');
+            
+            if(isAnalysisGroup) {
+                document.getElementById('mnav-summary').classList.add('active');
+                mobileTabs.classList.remove('hidden'); // Show sub-menu tabs
+                
+                // Highlight active sub-tab
+                document.querySelectorAll('.analysis-tab-item').forEach(el => el.classList.remove('active'));
+                if(viewName === 'summary') document.getElementById('mtab-summary').classList.add('active');
+                if(viewName === 'moodreport') document.getElementById('mtab-moodreport').classList.add('active');
+                if(viewName === 'myplans') document.getElementById('mtab-myplans').classList.add('active');
+                if(viewName === 'levelup') document.getElementById('mtab-levelup').classList.add('active');
+            } else {
+                mobileTabs.classList.add('hidden'); // Hide sub-menu tabs
+            }
 
+            // Init Views
             if(viewName === 'calendar') { renderMainCal(); const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(ds) { renderMoodEngine(ds); renderTodayGauge(ds); } }
             if(viewName === 'summary') { autoSetMonthRange(); renderSummary(); }
             if(viewName === 'mbti') { renderMbtiSection(); }
@@ -1126,7 +1251,7 @@
             if(viewName === 'levelup') { renderLevelUpView(); }
         }
 
-        // ==================== Gamification Logic (New Rules) ====================
+        // ==================== Gamification Logic ====================
         const levelConfig = [
             { level: 1, name: "萌新起步", xp: 0, desc: "迈出第一步，开始规划你的生活。" },
             { level: 2, name: "初窥门径", xp: 1000, desc: "你已经适应了记录，保持节奏。" },
@@ -1259,13 +1384,11 @@
             if (checkins[dateStr]) return;
             checkins[dateStr] = amount;
             localStorage.setItem('dailySenseCheckins', JSON.stringify(checkins));
-            
-            // Animation effect could go here
             alert(`🎉 签到成功！获得 ${amount} XP`);
             renderLevelUpView();
         }
 
-        // ==================== 保留原有逻辑函数 (保持不变) ====================
+        // ==================== 原有逻辑函数 (保持不变) ====================
         function autoSetMonthRange() {
             const now = new Date(); const year = now.getFullYear(); const month = String(now.getMonth() + 1).padStart(2, '0'); const lastDay = new Date(year, now.getMonth() + 1, 0).getDate(); const startStr = `${year}-${month}-01`; const endStr = `${year}-${month}-${lastDay}`;
             document.getElementById('sumStart').value = startStr; document.getElementById('sumEnd').value = endStr;
