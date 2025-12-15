@@ -322,7 +322,13 @@
         .xp-day { height: 36px; border-radius: 8px; background: var(--bg-color); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: default; border: 1px solid transparent; position: relative; }
         .xp-day.can-claim { background: var(--card-bg); border-color: var(--theme-color); color: var(--theme-color); cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .xp-day.can-claim:hover { background: var(--theme-color); color: #fff; }
+        
+        /* New: Coin Animation */
+        .xp-coin { width: 16px; height: 16px; background: #FFD700; border-radius: 50%; border: 2px solid #E6AC00; box-shadow: 0 2px 4px rgba(0,0,0,0.2); animation: coinBounce 1s infinite alternate; display: inline-block; margin-left: 2px; }
+        @keyframes coinBounce { 0% { transform: translateY(0); } 100% { transform: translateY(-3px); } }
+
         .xp-day.claimed { background: var(--theme-light); color: var(--theme-color); opacity: 0.6; }
+        .xp-day.missed { background: #ffe5e5; color: #ff3b30; border: 1px dashed #ff3b30; opacity: 0.7; }
         .xp-day.special { border-color: #ffcc00; color: #d4a000; }
         .xp-day.special.can-claim { background: #fff9e0; border-color: #ffcc00; }
         .xp-day.special.can-claim:hover { background: #ffcc00; color: #fff; }
@@ -451,9 +457,24 @@
             .report-filter-card .btn { margin-left: 0; width: 100%; }
             .report-filter-card label { margin-bottom: 0; }
 
-            /* Tooltip 手机端位置调整 */
-            .info-tooltip { width: 200px; bottom: auto; top: 120%; left: auto; right: 0; transform: none; }
-            .info-tooltip::after { top: auto; bottom: 100%; left: auto; right: 10px; border-color: transparent transparent rgba(0,0,0,0.9) transparent; }
+            /* Tooltip 手机端位置调整 - Fix Chart Middle */
+            .info-icon { position: static; /* Mobile only: Remove relative positioning from icon */ }
+            .summary-card, .mood-card, .xp-calendar-card { position: relative; z-index: auto; /* Make card the positioning context */ }
+            
+            .info-tooltip {
+                position: absolute; /* Relative to card now */
+                bottom: auto;
+                top: 50px; /* Push down below header */
+                left: 50%;
+                transform: translateX(-50%); /* Center horizontally */
+                width: 90%;
+                max-width: 300px;
+                z-index: 100;
+                text-align: left;
+                white-space: normal;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            }
+            .info-tooltip::after { display: none; }
         }
 
     </style>
@@ -940,7 +961,9 @@
                             <div class="chart-header">
                                 <h3>每日领取经验值</h3>
                                 <div class="info-icon">i<div class="info-tooltip">
-                                    每天领取经验值，持续升级你的等级。<br>等级提升后，除了会展示更酷的 LV 标识，还可享受更多高级的 VIP 特权。
+                                    1. 每天领取经验值，持续升级你的等级。<br>
+                                    2. 若当天未登录网站签到，将扣除 3 XP 作为惩罚。<br>
+                                    3. 等级提升后，除了会展示更酷的 LV 标识，还可享受更多高级的 VIP 特权。
                                 </div></div>
                             </div>
                             <h3 id="xpCalTitle" style="font-size: 14px; margin-bottom: 10px; color:var(--text-secondary);"></h3>
@@ -950,6 +973,7 @@
                             <div style="margin-top:15px; font-size:11px; color:var(--text-secondary); text-align:center;">
                                 <span style="display:inline-block; width:8px; height:8px; background:var(--theme-color); border-radius:50%; margin-right:4px;"></span>今日可领
                                 <span style="display:inline-block; width:8px; height:8px; background:#ffcc00; border-radius:50%; margin-left:10px; margin-right:4px;"></span>特殊奖励日
+                                <span style="display:inline-block; width:8px; height:8px; background:#ff3b30; border-radius:50%; margin-left:10px; margin-right:4px;"></span>缺勤扣分
                             </div>
                         </div>
 
@@ -1121,6 +1145,9 @@
             renderMbtiSection();
             requestNotificationPermission();
             setInterval(scheduleNotifications, 30000);
+            
+            // 新增: 检查签到漏打卡逻辑
+            checkMissedCheckins();
 
             // === 手机端初始化逻辑 ===
             if (window.innerWidth <= 900) {
@@ -1143,6 +1170,41 @@
                 });
             }
         });
+        
+        // --- 新增: 检查是否漏打卡，扣除XP ---
+        function checkMissedCheckins() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // 找出最后一次签到日期
+            let lastCheckinStr = '';
+            Object.keys(checkins).forEach(d => {
+                if(d > lastCheckinStr) lastCheckinStr = d;
+            });
+            
+            if (!lastCheckinStr) return; // 第一次使用，不扣分
+            
+            let lastDate = new Date(lastCheckinStr);
+            lastDate.setHours(0,0,0,0);
+            
+            // 如果上次签到不是今天也不是昨天，说明漏了
+            const oneDay = 24 * 60 * 60 * 1000;
+            const diffDays = Math.round((today - lastDate) / oneDay);
+            
+            if (diffDays > 1) {
+                // 遍历中间缺失的天数并扣分
+                for (let i = 1; i < diffDays; i++) {
+                    let missedDate = new Date(lastDate);
+                    missedDate.setDate(lastDate.getDate() + i);
+                    let mStr = missedDate.toISOString().split('T')[0];
+                    if (!checkins[mStr]) {
+                        checkins[mStr] = -3; // 写入惩罚记录
+                    }
+                }
+                localStorage.setItem('dailySenseCheckins', JSON.stringify(checkins));
+            }
+        }
 
         // ==================== Sidebar Navigation Logic ====================
         const subMenus = {
@@ -1345,7 +1407,9 @@
             
             for(let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const isClaimed = checkins[dateStr] !== undefined;
+                const checkinVal = checkins[dateStr]; // undefined, >0 (xp), or <0 (penalty)
+                const isClaimed = checkinVal > 0;
+                const isMissed = checkinVal < 0;
                 const isToday = d === todayDate;
                 const isPast = d < todayDate;
                 const bonus = specialDates[d];
@@ -1364,14 +1428,20 @@
                 if (isClaimed) {
                     el.classList.add('claimed');
                     content += `<div style="position:absolute; font-size:10px;">✔</div>`;
+                } else if (isMissed) {
+                    el.classList.add('missed');
+                    content += `<div style="position:absolute; font-size:8px;">${checkinVal}</div>`;
                 } else if (isToday) {
                     el.classList.add('can-claim');
                     el.title = `点击领取 ${xpVal} XP`;
+                    // 修改：今日可领时显示金币动画
+                    content += `<div class="xp-coin"></div>`;
                     el.onclick = () => claimXP(dateStr, xpVal);
                 } else if (!isPast) {
                     // Future dates, nothing
                 } else {
-                    // Past and not claimed
+                    // Past and not claimed/missed logic processed above?
+                    // 默认显示为过期
                     el.style.opacity = '0.3';
                 }
                 
@@ -1381,7 +1451,7 @@
         }
 
         function claimXP(dateStr, amount) {
-            if (checkins[dateStr]) return;
+            if (checkins[dateStr] && checkins[dateStr] > 0) return;
             checkins[dateStr] = amount;
             localStorage.setItem('dailySenseCheckins', JSON.stringify(checkins));
             alert(`🎉 签到成功！获得 ${amount} XP`);
@@ -1453,7 +1523,7 @@
         function handlePlanSelect(checkbox, updateBar = true) { const id = checkbox.value; if (checkbox.checked) selectedPlanIds.add(id); else selectedPlanIds.delete(id); if (updateBar) updateBulkActionBar(); }
         function updateBulkActionBar() { const bar = document.getElementById('bulkActionsBar'); document.getElementById('selectedPlanCount').innerText = selectedPlanIds.size; if (selectedPlanIds.size > 0 && isBulkMode) bar.classList.add('show'); else bar.classList.remove('show'); }
         function deleteSelectedPlans() { if (!confirm(`确定要删除选中的 ${selectedPlanIds.size} 项计划吗？`)) return; tasks = tasks.filter(t => !selectedPlanIds.has(String(t.id))); localStorage.setItem('finalV20Tasks', JSON.stringify(tasks)); toggleBulkMode(); renderMyPlans(); refreshAll(); }
-        function renderSummary() { const s = document.getElementById('sumStart').value; const e = document.getElementById('sumEnd').value; const data = tasks.filter(t => t.date >= s && t.date <= e); currentReviewData = data; const catSel = document.getElementById('reviewCatFilter'); catSel.innerHTML = '<option value="all">所有项目</option>'; categories.forEach(c => catSel.innerHTML += `<option value="${c.name}">${c.name}</option>`); if(data.length === 0) { const lc = document.getElementById('ganttLeftCanvas'); const rc = document.getElementById('ganttRightCanvas'); if(lc && rc) { lc.width=0; rc.width=0; } const charts = ['gaugeCanvas','trendCanvas','radarChartCanvas','eisenhowerCanvas']; charts.forEach(id => { const c = document.getElementById(id); if(c) { const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); } }); document.getElementById('wordCloudContainer').innerHTML = '<div style="color:#999;">无数据</div>'; return; } try { const mainColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim(); drawSplitGantt(data, s, e); renderStats(data); filterReviewTable(); renderPriorityChart(data); renderGaugeChart(data, mainColor); renderCatComparison(data); renderTrendChart(data, mainColor); renderPeakHoursChart(data, mainColor); renderWeeklyChart(data, mainColor); renderDurationStats(data); renderRadarChart(data, mainColor, s, e); renderEisenhowerChart(data, mainColor); const words = {}; data.forEach(t => { const parts = t.title.split(/[\s,，.。]+/); parts.forEach(w => { if(w.length > 1) words[w] = (words[w] || 0) + 1; }); }); const sorted = Object.keys(words).map(k => ({ word: k, count: words[k] })).sort((a,b) => b.count - a.count).slice(0, 30); renderSpiralWordCloud('wordCloudContainer', sorted); } catch(err) { console.error(err); } }
+        function renderSummary() { const s = document.getElementById('sumStart').value; const e = document.getElementById('sumEnd').value; const data = tasks.filter(t => t.date >= s && t.date <= e); currentReviewData = data; const catSel = document.getElementById('reviewCatFilter'); catSel.innerHTML = '<option value="all">所有项目</option>'; categories.forEach(c => catSel.innerHTML += `<option value="${c.name}">${c.name}</option>`); if(data.length === 0) { const lc = document.getElementById('ganttLeftCanvas'); const rc = document.getElementById('ganttRightCanvas'); if(lc && rc) { lc.width=0; rc.width=0; } const charts = ['gaugeCanvas','trendCanvas','radarChartCanvas','eisenhowerCanvas']; charts.forEach(id => { const c = document.getElementById(id); if(c) { const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); } }); document.getElementById('wordCloudContainer').innerHTML = '<div style="color:#999;">无数据</div>'; return; } try { const mainColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim(); drawSplitGantt(data, s, e); renderStats(data); filterReviewTable(); renderPriorityChart(data); renderGaugeChart(data, mainColor); renderCatComparison(data); renderTrendChart(data, mainColor); renderPeakHoursChart(data, mainColor); renderWeeklyChart(data, mainColor); renderDurationStats(data); renderRadarChart(data, mainColor, s, e); renderEisenhowerChart(data, mainColor, e); const words = {}; data.forEach(t => { const parts = t.title.split(/[\s,，.。]+/); parts.forEach(w => { if(w.length > 1) words[w] = (words[w] || 0) + 1; }); }); const sorted = Object.keys(words).map(k => ({ word: k, count: words[k] })).sort((a,b) => b.count - a.count).slice(0, 30); renderSpiralWordCloud('wordCloudContainer', sorted); } catch(err) { console.error(err); } }
         function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); ctx.fill(); }
         function renderStats(data) { const durMap = {}; let totalMin = 0; data.forEach(t => { const min = (parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1])); const d = min > 0 ? min : 0; durMap[t.category] = (durMap[t.category]||0) + d; totalMin += d; }); let grad = [], currDeg = 0, legend = ''; const cats = Object.keys(durMap); cats.forEach((cat, index) => { const p = durMap[cat]/totalMin; const deg = p*360; const c = getColor(cat); grad.push(`${c} ${currDeg}deg ${currDeg+deg}deg`); currDeg += deg; legend += `<div style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;background:${c};border-radius:50%"></span>${cat} ${Math.round(p*100)}%</div>`; }); document.getElementById('pieChart').style.background = `conic-gradient(${grad.join(',')})`; document.getElementById('pieLegend').innerHTML = legend; }
         function renderDurationStats(data) { let short=0, medium=0, long=0; data.forEach(t => { const m = (parseInt(t.endTime.split(':')[0])*60+parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60+parseInt(t.startTime.split(':')[1])); if(m<=60) short++; else if(m<=120) medium++; else long++; }); const total = short+medium+long; if(total===0) return; const degS = (short/total)*360, degM = (medium/total)*360, degL = (long/total)*360; const cS = priorities[3].color; const cM = priorities[2].color; const cL = priorities[1].color; document.getElementById('durationPie').style.background = `conic-gradient(${cS} 0deg ${degS}deg, ${cM} ${degS}deg ${degS+degM}deg, ${cL} ${degS+degM}deg 360deg)`; document.getElementById('durationLegend').innerHTML = `<div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cS}"></span>≤1h (${short})</div><div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cM}"></span>1-2h (${medium})</div><div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${cL}"></span>>2h (${long})</div>`; }
@@ -1466,8 +1536,193 @@
         function drawSplitGantt(data, startDateStr, endDateStr) { const leftC = document.getElementById('ganttLeftCanvas'); const rightC = document.getElementById('ganttRightCanvas'); const leftCtx = leftC.getContext('2d'); const rightCtx = rightC.getContext('2d'); const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim(); const dpr = window.devicePixelRatio || 1; const dateList = []; let curr = new Date(startDateStr); const end = new Date(endDateStr); while(curr <= end) { dateList.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); } if (dateList.length === 0) return; const uniqueTitles = [...new Set(data.map(t => t.title))].sort(); const leftW = 160, dateColW = 80, headerH = 40, rowH = 40; const rightW = dateList.length * dateColW; const totalH = headerH + (uniqueTitles.length * rowH) + 20; leftC.width = leftW * dpr; leftC.height = totalH * dpr; leftC.style.width = leftW + 'px'; leftC.style.height = totalH + 'px'; rightC.width = rightW * dpr; rightC.height = totalH * dpr; rightC.style.width = rightW + 'px'; rightC.style.height = totalH + 'px'; leftCtx.scale(dpr, dpr); rightCtx.scale(dpr, dpr); leftCtx.clearRect(0,0,leftW,totalH); rightCtx.clearRect(0,0,rightW,totalH); leftCtx.fillStyle = "rgba(0,0,0,0.03)"; leftCtx.fillRect(0,0,leftW,headerH); leftCtx.fillStyle = textColor; leftCtx.font = "bold 13px sans-serif"; leftCtx.textAlign = "left"; leftCtx.fillText("计划名称", 10, 25); leftCtx.beginPath(); leftCtx.moveTo(0, headerH); leftCtx.lineTo(leftW, headerH); leftCtx.strokeStyle="#e5e5ea"; leftCtx.stroke(); rightCtx.fillStyle = "rgba(0,0,0,0.03)"; rightCtx.fillRect(0,0,rightW,headerH); rightCtx.font = "11px sans-serif"; rightCtx.textAlign = "center"; dateList.forEach((date, i) => { const x = i * dateColW; const cx = x + dateColW / 2; rightCtx.fillStyle = textColor; rightCtx.fillText(date.substring(5), cx, 25); rightCtx.beginPath(); rightCtx.moveTo(x, 0); rightCtx.lineTo(x, totalH); rightCtx.strokeStyle = "#e5e5ea"; rightCtx.stroke(); }); rightCtx.beginPath(); rightCtx.moveTo(0, headerH); rightCtx.lineTo(rightW, headerH); rightCtx.stroke(); uniqueTitles.forEach((title, rowIndex) => { const y = headerH + (rowIndex * rowH); if(rowIndex % 2 === 0) { leftCtx.fillStyle = "rgba(0,0,0,0.02)"; leftCtx.fillRect(0, y, leftW, rowH); rightCtx.fillStyle = "rgba(0,0,0,0.02)"; rightCtx.fillRect(0, y, rightW, rowH); } leftCtx.fillStyle = textColor; leftCtx.textAlign = "left"; leftCtx.font = "12px sans-serif"; let displayTitle = title; if(displayTitle.length > 12) displayTitle = displayTitle.substring(0, 10) + ".."; leftCtx.fillText(displayTitle, 10, y + 25); leftCtx.beginPath(); leftCtx.moveTo(0, y+rowH); leftCtx.lineTo(leftW, y+rowH); leftCtx.strokeStyle="#f0f0f0"; leftCtx.stroke(); let tasksForTitle = data.filter(t => t.title === title); tasksForTitle.sort((a,b) => a.date.localeCompare(b.date)); let ranges = []; if(tasksForTitle.length > 0) { let currentRange = null; tasksForTitle.forEach(t => { const dIdx = dateList.indexOf(t.date); if(dIdx === -1) return; if(!currentRange) { currentRange = { start: dIdx, end: dIdx, progressSum: t.progress, count: 1, category: t.category }; } else { if (dIdx === currentRange.end + 1) { currentRange.end = dIdx; currentRange.progressSum += t.progress; currentRange.count++; } else { ranges.push(currentRange); currentRange = { start: dIdx, end: dIdx, progressSum: t.progress, count: 1, category: t.category }; } } }); if(currentRange) ranges.push(currentRange); } ranges.forEach(r => { const xStart = r.start * dateColW; const blockWidth = (r.end - r.start + 1) * dateColW; const marginX = 4; const barH = 32; const barY = y + (rowH - barH)/2; const radius = 8; const drawX = xStart + marginX; const drawW = blockWidth - (marginX * 2); const c = getColor(r.category); rightCtx.fillStyle = c; roundRect(rightCtx, drawX, barY, drawW, barH, radius); const fillRatio = r.progressSum / (r.count * 100); if(fillRatio > 0) { const fillW = drawW * fillRatio; const safeRadius = Math.min(radius, fillW/2); if (fillW > 0) { rightCtx.fillStyle = "rgba(255,255,255,0.4)"; roundRect(rightCtx, drawX, barY, fillW, barH, safeRadius); } } }); rightCtx.beginPath(); rightCtx.moveTo(0, y+rowH); rightCtx.lineTo(rightW, y+rowH); rightCtx.strokeStyle="#f0f0f0"; rightCtx.stroke(); }); }
         function renderDetailedTable(data) { const tbody = document.getElementById('reviewTableBody'); tbody.innerHTML = ''; if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">无数据</td></tr>'; return; } const map = new Map(); data.forEach(t => { const key = t.title + '|' + t.category; if(!map.has(key)) map.set(key, { title: t.title, category: t.category, count: 0, doneCount: 0, totalProg: 0 }); const item = map.get(key); item.count++; if(t.progress === 100) item.doneCount++; item.totalProg += t.progress; }); map.forEach(item => { const avgProg = Math.round(item.totalProg / item.count); const c = getColor(item.category); const completionRate = Math.round(item.totalProg / (item.count * 100) * 100); const tr = document.createElement('tr'); tr.innerHTML = `<td><span style="color:${c}; font-weight:bold;">${item.category}</span></td><td>${item.title}</td><td>${item.count} 次</td><td><div style="display:flex; align-items:center; gap:8px;"><div class="table-prog-bar"><div class="table-prog-fill" style="width:${completionRate}%; background:${c};"></div></div><span style="font-size:11px; font-weight:600; color:#666;">${completionRate}%</span></div></td><td><span class="avg-badge">${avgProg}%</span></td>`; tbody.appendChild(tr); }); }
         function filterReviewTable() { const statusFilter = document.getElementById('reviewStatusFilter').value; const catFilter = document.getElementById('reviewCatFilter').value; const prioFilter = document.getElementById('reviewPrioFilter').value; const filteredData = currentReviewData.filter(t => { if(statusFilter === 'completed' && t.progress < 100) return false; if(statusFilter === 'incomplete' && t.progress === 100) return false; if(catFilter !== 'all' && t.category !== catFilter) return false; if(prioFilter !== 'all' && t.priority !== prioFilter) return false; return true; }); renderDetailedTable(filteredData); }
-        function renderEisenhowerChart(data, themeColor) { const canvas = document.getElementById('eisenhowerCanvas'); const tooltip = document.getElementById('quadrantTooltip'); const container = document.getElementById('eisenhowerContainer'); const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1; const w = container.clientWidth, h = container.clientHeight; canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr); ctx.clearRect(0,0,w,h); quadrantDots = []; const today = new Date(); today.setHours(0,0,0,0); const prioMap = { 'lowest': 1, 'low': 2, 'medium': 3, 'high': 4, 'highest': 5 }; data.forEach(t => { const pVal = prioMap[t.priority] || 3; const bandWidth = 0.16; const startXFactor = 0.1 + (pVal - 1) * bandWidth; const normX = startXFactor + (Math.random() * bandWidth); const x = w * normX; const tDate = new Date(t.date); const diffTime = tDate - today; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); let urgencyFactor = 1 - (diffDays / 30); if (urgencyFactor < 0) urgencyFactor = 0; if (urgencyFactor > 1) urgencyFactor = 1; const y = (h * 0.1) + ((1 - urgencyFactor) * (h * 0.8)) + (Math.random()*20 - 10); const c = getColor(t.category); ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); quadrantDots.push({ x, y, r: 6, title: t.title, category: t.category }); }); canvas.onmousemove = function(e) { const rect = canvas.getBoundingClientRect(); const mx = e.clientX - rect.left; const my = e.clientY - rect.top; let found = null; for(let dot of quadrantDots) { const dx = mx - dot.x; const dy = my - dot.y; if(Math.sqrt(dx*dx + dy*dy) <= dot.r + 2) { found = dot; break; } } if(found) { tooltip.style.display = 'block'; tooltip.style.left = (mx + 10) + 'px'; tooltip.style.top = (my + 10) + 'px'; tooltip.innerHTML = `<strong>${found.title}</strong><br><span style="color:#ccc">${found.category}</span>`; canvas.style.cursor = 'pointer'; } else { tooltip.style.display = 'none'; canvas.style.cursor = 'default'; } }; canvas.onmouseleave = () => { tooltip.style.display = 'none'; }; }
-        function renderRadarChart(data, themeColor, startDateStr, endDateStr) { const canvas = document.getElementById('radarChartCanvas'); const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1; const w = 250, h = 250; canvas.width = w * dpr; canvas.height = h * dpr; canvas.style.width = w + 'px'; canvas.style.height = h + 'px'; ctx.scale(dpr, dpr); const cx = w/2, cy = h/2, r = 80; const completion = data.reduce((acc, t) => acc + t.progress, 0) / data.length || 0; let totalTaskMinutes = 0; data.forEach(t => { const sP = t.startTime.split(':'), eP = t.endTime.split(':'); const m = (parseInt(eP[0])*60 + parseInt(eP[1])) - (parseInt(sP[0])*60 + parseInt(sP[1])); if(m > 0) totalTaskMinutes += m; }); const sDate = new Date(startDateStr), eDate = new Date(endDateStr); const dayCount = Math.floor((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1; const diligenceScore = Math.min((totalTaskMinutes / (dayCount * 8 * 60)) * 100, 100); const highPrioCount = data.filter(t => t.priority === 'highest' || t.priority === 'high').length; const importanceScore = (highPrioCount / data.length) * 100 || 0; const longTaskCount = data.filter(t => { const min = (parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1])); return min > 60; }).length; const focusScore = (longTaskCount / data.length) * 100 || 0; const catsUsed = new Set(data.map(t => t.category)).size; const balanceScore = Math.min((catsUsed / categories.length) * 100, 100); const scores = [completion, diligenceScore, importanceScore, focusScore, balanceScore]; const labels = ["完成率", "勤奋度", "重要性", "专注度", "平衡性"]; ctx.clearRect(0,0,w,h); ctx.strokeStyle = "#e5e5ea"; ctx.lineWidth = 1; for(let level=1; level<=4; level++) { ctx.beginPath(); for(let i=0; i<5; i++) { const angle = (Math.PI*2 * i)/5 - Math.PI/2; const radius = (r/4)*level; const x = cx + Math.cos(angle)*radius; const y = cy + Math.sin(angle)*radius; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.stroke(); } ctx.strokeStyle = "#ddd"; for(let i=0; i<5; i++) { const angle = (Math.PI*2 * i)/5 - Math.PI/2; const x = cx + Math.cos(angle)*r, y = cy + Math.sin(angle)*r; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke(); const lx = cx + Math.cos(angle)*(r+20), ly = cy + Math.sin(angle)*(r+20); ctx.fillStyle = "#666"; ctx.font = "10px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(labels[i], lx, ly); } ctx.beginPath(); for(let i=0; i<5; i++) { const angle = (Math.PI*2 * i)/5 - Math.PI/2; const radius = (scores[i]/100)*r; const x = cx + Math.cos(angle)*radius, y = cy + Math.sin(angle)*radius; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.fillStyle = themeColor + "40"; ctx.fill(); ctx.strokeStyle = themeColor; ctx.lineWidth=2; ctx.stroke(); }
+        
+        // --- 修改 1: 任务分布四象限 (过滤过期 & 标题去重) ---
+        function renderEisenhowerChart(data, themeColor, endDateStr) {
+            const canvas = document.getElementById('eisenhowerCanvas');
+            const tooltip = document.getElementById('quadrantTooltip');
+            const container = document.getElementById('eisenhowerContainer');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const w = container.clientWidth, h = container.clientHeight;
+            canvas.width = w * dpr; canvas.height = h * dpr;
+            ctx.scale(dpr, dpr); ctx.clearRect(0,0,w,h);
+            quadrantDots = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const todayStr = today.toISOString().split('T')[0];
+
+            // 1. 过滤掉过去的计划 (日期 < 今天)
+            let futureData = data.filter(t => t.date >= todayStr);
+
+            // 2. 相同名称计划去重，保留日期最早的
+            let uniqueTaskMap = {};
+            futureData.forEach(t => {
+                if(!uniqueTaskMap[t.title]) {
+                    uniqueTaskMap[t.title] = t;
+                } else {
+                    // 如果当前遍历的日期更早，则替换
+                    if (t.date < uniqueTaskMap[t.title].date) {
+                        uniqueTaskMap[t.title] = t;
+                    }
+                }
+            });
+            let chartData = Object.values(uniqueTaskMap);
+
+            // 新增：计算统计区间的总时长 (今天 -> 统计结束日)
+            let maxDate = new Date(endDateStr);
+            maxDate.setHours(0,0,0,0);
+            let maxDuration = maxDate - today;
+            // 如果结束日期选的是今天或过去，防止除以0或负数，默认为1天
+            if (maxDuration <= 0) maxDuration = 1000 * 60 * 60 * 24;
+
+            const prioMap = { 'lowest': 1, 'low': 2, 'medium': 3, 'high': 4, 'highest': 5 };
+            chartData.forEach(t => {
+                const pVal = prioMap[t.priority] || 3;
+                const bandWidth = 0.16;
+                const startXFactor = 0.1 + (pVal - 1) * bandWidth;
+                const normX = startXFactor + (Math.random() * bandWidth);
+                const x = w * normX;
+                
+                const tDate = new Date(t.date);
+                // 新逻辑：计算当前任务距离今天的毫秒数
+                const diffTime = tDate - today;
+                
+                // 计算紧急程度因子 (0~1)
+                // 距离越近 (diffTime越小)，因子越接近 1 (最上方/最紧急)
+                // 距离越远 (diffTime接近maxDuration)，因子越接近 0 (最下方/不紧急)
+                let urgencyFactor = 1 - (diffTime / maxDuration);
+                
+                // 边界值处理
+                if (urgencyFactor < 0) urgencyFactor = 0;
+                if (urgencyFactor > 1) urgencyFactor = 1;
+
+                const y = (h * 0.1) + ((1 - urgencyFactor) * (h * 0.8)) + (Math.random()*20 - 10);
+                const c = getColor(t.category);
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI*2);
+                ctx.fillStyle = c;
+                ctx.fill();
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                quadrantDots.push({ x, y, r: 6, title: t.title, category: t.category });
+            });
+            
+            // 修复: 鼠标移动检测逻辑，使用相对于画布的坐标
+            canvas.onmousemove = function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+                let found = null;
+                for(let dot of quadrantDots) {
+                    const dx = mx - dot.x;
+                    const dy = my - dot.y;
+                    if(Math.sqrt(dx*dx + dy*dy) <= dot.r + 2) { found = dot; break; }
+                }
+                if(found) {
+                    tooltip.style.display = 'block';
+                    // 这里使用 mx + 10 是相对于 container 的定位
+                    tooltip.style.left = (mx + 10) + 'px';
+                    tooltip.style.top = (my + 10) + 'px';
+                    tooltip.innerHTML = `<strong>${found.title}</strong><br><span style="color:#ccc">${found.category}</span>`;
+                    canvas.style.cursor = 'pointer';
+                } else {
+                    tooltip.style.display = 'none';
+                    canvas.style.cursor = 'default';
+                }
+            };
+            canvas.onmouseleave = () => { tooltip.style.display = 'none'; };
+        }
+
+        // --- 修改 2: 五维雷达图算法优化 ---
+        function renderRadarChart(data, themeColor, startDateStr, endDateStr) {
+            const canvas = document.getElementById('radarChartCanvas');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const w = 250, h = 250;
+            canvas.width = w * dpr; canvas.height = h * dpr;
+            canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+            ctx.scale(dpr, dpr);
+            const cx = w/2, cy = h/2, r = 80;
+            
+            // 1. 完成率: 仅仅计算筛选区间内的数据
+            const completion = data.length > 0 ? (data.reduce((acc, t) => acc + t.progress, 0) / data.length) : 0;
+            
+            // 2. 勤奋度 (不变): 根据平均每天工作时长评估
+            let totalTaskMinutes = 0;
+            let deepWorkMinutes = 0;
+            data.forEach(t => {
+                const sP = t.startTime.split(':'), eP = t.endTime.split(':');
+                const m = (parseInt(eP[0])*60 + parseInt(eP[1])) - (parseInt(sP[0])*60 + parseInt(sP[1]));
+                if(m > 0) totalTaskMinutes += m;
+                if(m >= 60) deepWorkMinutes += m; // 大于等于60分钟算专注时段
+            });
+            const sDate = new Date(startDateStr), eDate = new Date(endDateStr);
+            const dayCount = Math.floor((eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+            const diligenceScore = Math.min((totalTaskMinutes / (dayCount * 8 * 60)) * 100, 100);
+            
+            // 3. 重要性 (不变): 高优先级任务占比
+            const highPrioCount = data.filter(t => t.priority === 'highest' || t.priority === 'high').length;
+            const importanceScore = (highPrioCount / data.length) * 100 || 0;
+            
+            // 4. 专注度 (修改逻辑): 深度工作时间(>60m)占比
+            // 以前是看任务数量，现在看时间占比，更合理
+            const focusScore = totalTaskMinutes > 0 ? (deepWorkMinutes / totalTaskMinutes) * 100 : 0;
+            
+            // 5. 平衡性 (修改逻辑): (使用到的分类数 / 总分类数) * 100
+            const catsUsed = new Set(data.map(t => t.category)).size;
+            // 这里的 categories 是全局定义的总分类数组
+            const totalCatsDefined = categories.length || 1;
+            const balanceScore = Math.min((catsUsed / totalCatsDefined) * 100, 100);
+
+            const scores = [completion, diligenceScore, importanceScore, focusScore, balanceScore];
+            const labels = ["完成率", "勤奋度", "重要性", "专注度", "平衡性"];
+            
+            ctx.clearRect(0,0,w,h);
+            ctx.strokeStyle = "#e5e5ea";
+            ctx.lineWidth = 1;
+            for(let level=1; level<=4; level++) {
+                ctx.beginPath();
+                for(let i=0; i<5; i++) {
+                    const angle = (Math.PI*2 * i)/5 - Math.PI/2;
+                    const radius = (r/4)*level;
+                    const x = cx + Math.cos(angle)*radius;
+                    const y = cy + Math.sin(angle)*radius;
+                    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+            ctx.strokeStyle = "#ddd";
+            for(let i=0; i<5; i++) {
+                const angle = (Math.PI*2 * i)/5 - Math.PI/2;
+                const x = cx + Math.cos(angle)*r, y = cy + Math.sin(angle)*r;
+                ctx.beginPath();
+                ctx.moveTo(cx,cy);
+                ctx.lineTo(x,y);
+                ctx.stroke();
+                const lx = cx + Math.cos(angle)*(r+20), ly = cy + Math.sin(angle)*(r+20);
+                ctx.fillStyle = "#666";
+                ctx.font = "10px sans-serif";
+                ctx.textAlign="center";
+                ctx.textBaseline="middle";
+                ctx.fillText(labels[i], lx, ly);
+            }
+            ctx.beginPath();
+            for(let i=0; i<5; i++) {
+                const angle = (Math.PI*2 * i)/5 - Math.PI/2;
+                const radius = (scores[i]/100)*r;
+                const x = cx + Math.cos(angle)*radius, y = cy + Math.sin(angle)*radius;
+                if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = themeColor + "40";
+            ctx.fill();
+            ctx.strokeStyle = themeColor;
+            ctx.lineWidth=2;
+            ctx.stroke();
+        }
     </script>
 </body>
 </html>
