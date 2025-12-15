@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Daily Sense - MBTI Deep Analysis</title>
     <style>
         /* ==================== 1. 核心视觉样式 ==================== */
@@ -15,8 +15,9 @@
             --text-secondary: #86868b;
             --border: #e5e5ea;
             --theme-color: #0071e3; /* 蓝色系 (A选项) */
+            --theme-bg: #f2f7ff;
             --warm-color: #ff2d55;  /* 红色系 (B选项) */
-            --accent-color: #000000;
+            --warm-bg: #fff2f4;
             --radius-card: 24px;
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-lg: 0 10px 40px rgba(0,0,0,0.08);
@@ -55,7 +56,7 @@
         .btn-start:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
         .btn-start:active { transform: scale(0.98); }
 
-        /* ==================== 4. 答题交互 (精准对齐版) ==================== */
+        /* ==================== 4. 答题交互 (PC默认样式) ==================== */
         .quiz-wrapper { width: 100%; max-width: 900px; display: none; animation: slideUp 0.5s ease; padding-bottom: 60px; }
         
         .progress-track { width: 100%; height: 6px; background: #e5e5ea; border-radius: 3px; margin-bottom: 40px; overflow: hidden; }
@@ -63,50 +64,51 @@
 
         .question-card {
             background: var(--card-bg); padding: 50px; border-radius: 32px; box-shadow: var(--shadow-lg);
-            text-align: center; position: relative;
+            text-align: center; position: relative; overflow: hidden;
         }
         .q-text { font-size: 26px; font-weight: 700; margin-bottom: 50px; line-height: 1.4; color: #000; min-height: 70px; display: flex; align-items: center; justify-content: center; }
 
-        /* 选项描述区 */
-        .options-display { display: flex; justify-content: space-between; margin-bottom: 40px; gap: 30px; align-items: stretch; }
+        .options-display { display: flex; justify-content: space-between; margin-bottom: 40px; gap: 30px; align-items: stretch; position: relative; }
+        
+        /* PC端 VS 分隔符 */
+        .vs-divider { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: 900; color: #e5e5ea; font-size: 14px; background: #fff; padding: 5px; z-index: 5; }
+
         .opt-box {
             flex: 1; padding: 25px; border-radius: 20px; background: #f5f5f7;
             font-size: 16px; color: #555; transition: 0.3s; line-height: 1.5; font-weight: 500;
             display: flex; align-items: center; justify-content: center; text-align: center; border: 2px solid transparent;
+            cursor: default;
         }
-        .opt-box.active-a { background: #eef2ff; border-color: var(--theme-color); color: var(--theme-color); box-shadow: 0 4px 15px rgba(0,113,227,0.15); }
-        .opt-box.active-b { background: #fff0f5; border-color: var(--warm-color); color: var(--warm-color); box-shadow: 0 4px 15px rgba(255,45,85,0.15); }
+        .opt-box.side-a:hover { background: var(--theme-bg); border-color: rgba(0,113,227,0.3); }
+        .opt-box.side-b:hover { background: var(--warm-bg); border-color: rgba(255,45,85,0.3); }
 
-        /* 刻度尺容器 */
+        .opt-box.active-a { background: var(--theme-color) !important; border-color: var(--theme-color); color: #fff !important; box-shadow: 0 4px 15px rgba(0,113,227,0.3); transform: scale(1.02); }
+        .opt-box.active-b { background: var(--warm-color) !important; border-color: var(--warm-color); color: #fff !important; box-shadow: 0 4px 15px rgba(255,45,85,0.3); transform: scale(1.02); }
+
+        /* 刻度尺容器 (PC) */
         .scale-area { position: relative; margin: 0 20px; height: 80px; display: flex; align-items: flex-end; justify-content: center; }
         
-        /* 轴线背景 */
         .scale-line {
             position: absolute; top: 55px; left: 0; right: 0; height: 4px; background: #e5e5ea; border-radius: 2px; z-index: 1;
         }
 
-        /* 刻度点容器 (Flex 布局保证对齐) */
         .scale-points-wrapper {
             display: flex; justify-content: space-between; width: 100%; position: relative; z-index: 2;
         }
 
-        /* 单个刻度项 */
         .scale-item {
             display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 80px;
             transition: transform 0.2s;
         }
         .scale-item:hover { transform: translateY(-2px); }
 
-        /* 文字标签 */
+        /* 文字标签 (PC: 在上面) */
         .scale-label {
             font-size: 12px; font-weight: 600; margin-bottom: 12px; opacity: 0.5; transition: 0.2s;
             text-align: center; white-space: nowrap;
         }
-        /* 颜色区分 */
         .scale-item.side-a .scale-label { color: var(--theme-color); }
         .scale-item.side-b .scale-label { color: var(--warm-color); }
-        
-        /* 选中态/Hover态 文字变实 */
         .scale-item:hover .scale-label, .scale-item.active .scale-label { opacity: 1; transform: scale(1.05); }
 
         /* 圆点 */
@@ -116,7 +118,6 @@
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
-        /* 选中态圆点 */
         .scale-item.side-a:hover .scale-dot { border-color: var(--theme-color); }
         .scale-item.side-b:hover .scale-dot { border-color: var(--warm-color); }
 
@@ -129,7 +130,6 @@
             box-shadow: 0 4px 10px rgba(255,45,85,0.4);
         }
         
-        /* 圆点大小微调 (中间的小一点，两边大一点，可选) */
         .scale-item:nth-child(3) .scale-dot, .scale-item:nth-child(4) .scale-dot { width: 20px; height: 20px; }
         .scale-item:nth-child(1) .scale-dot, .scale-item:nth-child(6) .scale-dot { width: 28px; height: 28px; }
 
@@ -144,53 +144,32 @@
 
         /* ==================== 5. 结果页 (接地气深度版) ==================== */
         .result-container { display: none; width: 100%; animation: fadeIn 0.8s ease; padding-bottom: 80px; }
-        
         .result-layout { display: flex; gap: 50px; align-items: flex-start; }
-        @media (max-width: 900px) { .result-layout { flex-direction: column; } }
-
-        /* 左侧：数据面板 */
         .result-sidebar { flex: 0 0 340px; position: sticky; top: 100px; }
-        .res-card-visual {
-            background: #fff; border-radius: 24px; padding: 30px; box-shadow: var(--shadow-sm);
-            text-align: center; border: 1px solid var(--border); margin-bottom: 20px;
-        }
-        
+        .res-card-visual { background: #fff; border-radius: 24px; padding: 30px; box-shadow: var(--shadow-sm); text-align: center; border: 1px solid var(--border); margin-bottom: 20px; }
         .type-code { font-size: 80px; font-weight: 900; line-height: 1; margin-bottom: 5px; font-family: var(--font-head); letter-spacing: -2px; color: #000; }
         .type-name { font-size: 24px; font-weight: 700; color: #555; margin-bottom: 15px; }
         .type-tag { display: inline-block; padding: 6px 16px; background: #000; color: #fff; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 30px; }
-
         .chart-radar-box { height: 260px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
-
         .dim-bars { margin-top: 20px; text-align: left; }
         .dim-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 12px; font-weight: 700; color: #888; }
         .dim-track { flex: 1; height: 8px; background: #f0f0f2; border-radius: 4px; margin: 0 10px; position: relative; overflow: hidden; }
         .dim-fill-l { position: absolute; left: 0; top: 0; height: 100%; background: var(--theme-color); }
         .dim-fill-r { position: absolute; right: 0; top: 0; height: 100%; background: var(--warm-color); }
-        
-        /* 右侧：深度内容 */
         .result-content { flex: 1; background: #fff; border-radius: 24px; padding: 60px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-        
         .article-title { font-size: 32px; font-weight: 800; margin-bottom: 10px; color: #1d1d1f; letter-spacing: -0.5px; }
         .article-subtitle { font-size: 18px; color: var(--text-secondary); margin-bottom: 50px; font-weight: 400; line-height: 1.6; border-bottom: 1px solid #f0f0f2; padding-bottom: 20px; }
-
         .section-block { margin-bottom: 50px; }
         .section-head { font-size: 22px; font-weight: 700; color: #000; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
         .section-icon { font-size: 24px; }
-        
         .text-para { font-size: 17px; line-height: 1.9; color: #333; margin-bottom: 18px; text-align: justify; }
         .list-item { margin-bottom: 12px; padding-left: 20px; position: relative; font-size: 17px; color: #444; line-height: 1.7; }
         .list-item::before { content: "•"; position: absolute; left: 0; color: var(--theme-color); font-weight: bold; }
-
-        /* 新增图表组件 (文章内) */
         .mini-chart-box { background: #f9f9fa; border-radius: 16px; padding: 20px; margin: 20px 0; border: 1px solid #eee; }
         .chart-label { font-size: 13px; font-weight: 600; color: #888; margin-bottom: 8px; text-align: center; }
-        
-        /* 电池图 (能量来源) */
         .battery-container { display: flex; height: 30px; border-radius: 6px; overflow: hidden; border: 2px solid #333; width: 80%; margin: 0 auto; position: relative; }
         .battery-pos { height: 100%; background: var(--theme-color); transition: width 1s; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; }
         .battery-tip { width: 6px; height: 14px; background: #333; position: absolute; right: -8px; top: 6px; border-radius: 0 2px 2px 0; }
-
-        /* 天平图 (决策) */
         .balance-scale { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
         .balance-side { text-align: center; font-size: 14px; font-weight: 600; width: 40%; }
         .balance-bar { flex: 1; height: 6px; background: #e5e5ea; border-radius: 3px; position: relative; }
@@ -199,13 +178,123 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ==================== 6. 手机端优化适配 (Mobile Comfort Mode) ==================== */
+        @media (max-width: 768px) {
+            .header { padding: 15px 20px; height: 60px; }
+            .logo { font-size: 18px; }
+            
+            .container { padding: 80px 15px 30px 15px; }
+            
+            /* Intro */
+            .intro-title { font-size: 32px; }
+            .intro-desc { font-size: 15px; }
+            
+            /* Quiz Card - 极致舒适布局 */
+            .question-card { padding: 30px 15px; border-radius: 24px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+            .q-text { font-size: 19px; margin-bottom: 25px; min-height: auto; text-align: left; font-weight: 700; line-height: 1.5; }
+            
+            .progress-track { margin-bottom: 25px; }
+
+            /* 保持左右并列，但增加区分度 */
+            .options-display {
+                flex-direction: row;
+                gap: 10px;
+                margin-bottom: 30px;
+                align-items: stretch;
+            }
+            .vs-divider { display: none; } /* 手机端隐藏中间的VS */
+
+            .opt-box {
+                width: 50%;
+                font-size: 13px;
+                padding: 15px 10px;
+                border-radius: 16px;
+                line-height: 1.4;
+                /* 关键：手机端默认带淡色背景，区分左右 */
+                background: #f2f7ff; /* 淡蓝 */
+                color: #004d99;
+                border: 1px solid rgba(0, 113, 227, 0.1);
+            }
+            .opt-box.side-b {
+                background: #fff2f4; /* 淡红 */
+                color: #99001a;
+                border: 1px solid rgba(255, 45, 85, 0.1);
+            }
+
+            /* 选中态增强 */
+            .opt-box.active-a { background: #0071e3 !important; color: #fff !important; transform: scale(1.05); z-index: 2; box-shadow: 0 8px 20px rgba(0,113,227,0.3); border: none; }
+            .opt-box.active-b { background: #ff2d55 !important; color: #fff !important; transform: scale(1.05); z-index: 2; box-shadow: 0 8px 20px rgba(255,45,85,0.3); border: none; }
+
+            /* 手机端刻度尺重构：文字在下，按钮在上 */
+            .scale-area { margin: 0; height: auto; }
+            .scale-line { display: none; } /* 隐藏线 */
+            
+            .scale-points-wrapper {
+                justify-content: space-between;
+                gap: 2px;
+                padding: 0;
+            }
+
+            /* 将刻度项反转：点在上，字在下 */
+            .scale-item {
+                width: 16%;
+                height: auto;
+                flex-direction: column-reverse; /* 关键：反转布局 */
+                gap: 8px; /* 点和字之间的距离 */
+            }
+            
+            /* 文字显示：强制显示，调整字号 */
+            .scale-label {
+                display: block !important;
+                opacity: 0.7;
+                font-size: 10px;
+                margin: 0;
+                transform: scale(0.9); /* 防止文字换行 */
+                white-space: nowrap;
+            }
+            
+            /* 选中时文字更明显 */
+            .scale-item.active .scale-label { opacity: 1; font-weight: 700; transform: scale(1); }
+
+            /* 自定义圆点大小和颜色，形成视觉阶梯 */
+            .scale-dot { border: none; transition: 0.2s; box-shadow: none; }
+
+            /* 左侧蓝色阵营 */
+            .scale-item.side-a:nth-child(1) .scale-dot { width: 32px; height: 32px; background: #dcebff; border-radius: 8px; } /* 最同意-大方块 */
+            .scale-item.side-a:nth-child(2) .scale-dot { width: 26px; height: 26px; background: #eef6ff; border-radius: 6px; }
+            .scale-item.side-a:nth-child(3) .scale-dot { width: 20px; height: 20px; background: #f5faff; border-radius: 4px; }
+
+            /* 右侧红色阵营 */
+            .scale-item.side-b:nth-child(4) .scale-dot { width: 20px; height: 20px; background: #fff5f7; border-radius: 4px; }
+            .scale-item.side-b:nth-child(5) .scale-dot { width: 26px; height: 26px; background: #ffeef1; border-radius: 6px; }
+            .scale-item.side-b:nth-child(6) .scale-dot { width: 32px; height: 32px; background: #ffdce1; border-radius: 8px; }
+
+            /* 选中态：变成实心深色 */
+            .scale-item.active.side-a .scale-dot { background: var(--theme-color); transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,113,227,0.3); }
+            .scale-item.active.side-b .scale-dot { background: var(--warm-color); transform: scale(1.1); box-shadow: 0 4px 10px rgba(255,45,85,0.3); }
+
+            /* 操作栏 */
+            .action-row { margin-top: 30px; }
+            .nav-btn { width: 44px; height: 44px; font-size: 18px; }
+            
+            /* Result Layout */
+            .result-layout { flex-direction: column; gap: 20px; }
+            .result-sidebar { flex: none; width: 100%; position: static; }
+            .res-card-visual { padding: 20px; }
+            
+            .result-content { padding: 25px; border-radius: 20px; }
+            .article-title { font-size: 24px; }
+            .section-head { font-size: 18px; }
+            .text-para, .list-item { font-size: 15px; text-align: left; }
+        }
+
     </style>
 </head>
 <body>
 
     <!-- 顶部导航 -->
     <header class="header">
-        <div class="logo">Daily Sense. <span style="font-weight:400; color:#86868b; margin-left:10px;">MBTI Deep Dive</span></div>
+        <div class="logo">Daily Sense. <span style="font-weight:400; color:#86868b; margin-left:10px;">MBTI</span></div>
         <div class="progress-text" id="progressText"></div>
         <div class="close-btn" onclick="window.close()">✕</div>
     </header>
@@ -224,7 +313,7 @@
             <button class="btn-start" onclick="startQuiz()">开始深度探索</button>
         </div>
 
-        <!-- 2. 答题页 (精确对齐版) -->
+        <!-- 2. 答题页 (手机端优化版) -->
         <div id="quizPage" class="quiz-wrapper">
             <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
             
@@ -232,11 +321,12 @@
                 <div class="q-text" id="qText">题目加载中...</div>
                 
                 <div class="options-display">
-                    <div class="opt-box" id="optADesc">选项 A</div>
-                    <div class="opt-box" id="optBDesc">选项 B</div>
+                    <div class="opt-box side-a" id="optADesc">选项 A</div>
+                    <div class="vs-divider">VS</div>
+                    <div class="opt-box side-b" id="optBDesc">选项 B</div>
                 </div>
 
-                <!-- 优化后的刻度尺：文字与圆点垂直对齐 -->
+                <!-- 优化后的刻度尺 -->
                 <div class="scale-area">
                     <div class="scale-line"></div>
                     <div class="scale-points-wrapper">
@@ -397,6 +487,17 @@
     </div>
 
     <script>
+        // ==================== 0. 数据同步核心 ====================
+        // 解析 URL 参数获取用户名
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentUser = urlParams.get('user');
+
+        // 缓存键生成器
+        function getDBKey(key) {
+            if (!currentUser) return key;
+            return `${currentUser}_${key}`;
+        }
+
         // ==================== 1. 完整48题库 (Standard 48-item MBTI) ====================
         const fullQuestions = [
             { id:1,  text: "当你要去认识新朋友时，你会：", A: "既想要多跟对方说话，也想要听对方说话", B: "更想要听对方说话", col:1 },
@@ -587,9 +688,9 @@
             const finalType = L1 + L2 + L3 + L4;
             const info = typeDetails[finalType];
 
-            // ************** 关键修改：存储到 localStorage **************
-            localStorage.setItem('dailySenseMBTI', finalType);
-            // **********************************************************
+            // ************** 关键修改：存储到 带用户前缀的 localStorage **************
+            localStorage.setItem(getDBKey('dailySenseMBTI'), finalType);
+            // ********************************************************************
 
             // 1. 填充基础信息
             document.getElementById('resCode').innerText = finalType;
@@ -769,4 +870,3 @@
     </script>
 </body>
 </html>
-

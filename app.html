@@ -1604,7 +1604,11 @@
             document.getElementById('myPlanStart').value = `${year}-01-01`; document.getElementById('myPlanEnd').value = `${year}-12-31`;
             document.getElementById('moodReportStart').value = startStr; document.getElementById('moodReportEnd').value = endStr;
         }
-        function openMbtiPage() { window.open('a_mbti_test.html', '_blank'); }
+        function openMbtiPage() {
+            // 将当前用户名传给测试页，如果没有登录则传空
+            const userParam = currentUser ? '?user=' + encodeURIComponent(currentUser) : '';
+            window.open('a_mbti_test.html' + userParam, '_blank');
+        }
         function renderMbtiSection() {
             const mbtiCode = localStorage.getItem(getDBKey('dailySenseMBTI')); const contentArea = document.getElementById('mbtiContentArea'); const badge = document.getElementById('mbtiBadge');
             if(mbtiCode && typeDetails[mbtiCode]) { const info = typeDetails[mbtiCode]; badge.innerText = mbtiCode; badge.style.color = "var(--theme-color)"; contentArea.innerHTML = `<div style="font-size: 60px; font-weight: 800; color: var(--theme-color); line-height: 1; margin-bottom: 5px;">${mbtiCode}</div><h2 style="margin-bottom: 5px;">${info.name}</h2><p style="color: var(--text-secondary); margin-bottom: 25px; font-weight: 500;">"${info.slogan}"</p><button class="btn btn-outline" style="padding:10px 25px;" onclick="openMbtiPage()">重新测试</button>`; } else { badge.innerText = "?"; badge.style.color = "var(--text-secondary)"; contentArea.innerHTML = `<h2 style="margin-bottom:10px;">探索你的性格类型</h2><p style="color:var(--text-secondary); margin-bottom:30px; max-width:400px;">基于荣格心理学维度的深度自我扫描，了解真实的自己，只需几分钟。</p><button class="btn btn-primary" style="padding:12px 30px; font-size:16px;" onclick="openMbtiPage()">点击测试你的MBTI</button>`; }
