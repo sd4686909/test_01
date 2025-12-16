@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Daily Sense - Cloud Sync Edition</title>
+    <title>Daily Sense - V29 Refined Auth</title>
     <style>
         /* ==================== 1. 核心视觉样式 (保持不变) ==================== */
         :root {
@@ -1185,17 +1185,13 @@
     </div>
 
     <script>
-        // ==================== 云端同步核心 (Cloud Sync) ====================
-        
-        // 你的服务器 IP
-        const API_URL = 'http://150.158.176.189:5000';
+        // ==================== 认证核心 (Client Side Auth) ====================
+        let currentUser = null;
+        let users = JSON.parse(localStorage.getItem('dailySenseUsers')) || {};
 
-        let authToken = localStorage.getItem('dailySenseToken');
-        let currentUser = localStorage.getItem('dailySenseUser');
-
-        // 辅助函数：生成带用户前缀的 Key (保留本地缓存逻辑)
+        // Helper: Get user specific storage key
         function getDBKey(key) {
-            if (!currentUser) return key;
+            if (!currentUser) return key; // Fallback for pre-login logic (theme etc)
             return `${currentUser}_${key}`;
         }
 
@@ -1211,184 +1207,71 @@
             }
         }
 
-        // --- 1. 登录 (连接后端) ---
-        async function handleLogin() {
-            const u = document.getElementById('login-username').value.trim();
-            const p = document.getElementById('login-password').value;
-            
-            try {
-                const res = await fetch(`${API_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p })
-                });
-                
-                const data = await res.json();
-                
-                if (res.ok) {
-                    // 登录成功
-                    authToken = data.token;
-                    currentUser = data.username;
-                    localStorage.setItem('dailySenseToken', authToken);
-                    localStorage.setItem('dailySenseUser', currentUser);
-                    
-                    // 隐藏登录框
-                    document.getElementById('auth-screen').style.opacity = 0;
-                    setTimeout(() => {
-                        document.getElementById('auth-screen').style.display = 'none';
-                        document.body.classList.remove('auth-locked');
-                    }, 500);
-                    document.getElementById('display-username').innerText = currentUser;
-
-                    // 使用云端数据初始化 App
-                    loadDataToApp(data.gameData);
-                    
-                } else {
-                    alert(data.message || '登录失败');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('无法连接到服务器，请检查：\n1. 服务器是否运行中？\n2. 阿里云/腾讯云防火墙是否开放了5000端口？');
-            }
-        }
-
-        // --- 2. 注册 (连接后端) ---
-        async function handleRegister() {
+        function handleRegister() {
             const u = document.getElementById('reg-username').value.trim();
             const p = document.getElementById('reg-password').value;
             const c = document.getElementById('reg-confirm').value;
+            
+            // New fields
+            const g = document.getElementById('reg-gender').value;
+            const r = document.getElementById('reg-region').value;
 
+            if (!u || !p) return alert('请输入用户名和密码');
             if (p !== c) return alert('两次密码输入不一致');
+            if (!g) return alert('请选择性别');
+            if (!r) return alert('请填写地区');
 
-            try {
-                const res = await fetch(`${API_URL}/api/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    alert('注册成功，正在自动登录...');
-                    document.getElementById('login-username').value = u;
-                    document.getElementById('login-password').value = p;
-                    handleLogin();
-                } else {
-                    alert(data.message);
+            if (users[u]) return alert('用户名已存在');
+
+            // Store as object
+            users[u] = { password: p, gender: g, region: r };
+            localStorage.setItem('dailySenseUsers', JSON.stringify(users));
+            alert('注册成功，请登录');
+            toggleAuthMode('login');
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value;
+            
+            const userRecord = users[u];
+            let isValid = false;
+
+            // Compatibility check: handle old string format vs new object format
+            if (userRecord) {
+                if (typeof userRecord === 'string') {
+                    if (userRecord === p) isValid = true;
+                } else if (typeof userRecord === 'object') {
+                    if (userRecord.password === p) isValid = true;
                 }
-            } catch (error) {
-                alert('注册请求失败，请检查网络或服务器');
+            }
+
+            if (isValid) {
+                currentUser = u;
+                document.getElementById('auth-screen').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.body.classList.remove('auth-locked');
+                }, 500);
+                document.getElementById('display-username').innerText = u;
+                
+                // Initialize User Data
+                initAppData();
+            } else {
+                alert('用户名或密码错误');
             }
         }
 
         function handleLogout() {
-            authToken = null;
             currentUser = null;
-            localStorage.removeItem('dailySenseToken');
             document.getElementById('auth-screen').style.display = 'flex';
             setTimeout(() => document.getElementById('auth-screen').style.opacity = 1, 10);
             document.body.classList.add('auth-locked');
+            // Reset fields
             document.getElementById('login-password').value = '';
         }
 
-        // --- 3. 将云端数据应用到页面 ---
-        function loadDataToApp(cloudData) {
-            if(!cloudData) cloudData = {};
-            
-            tasks = cloudData.tasks || [];
-            // 如果云端没有分类，使用默认分类
-            categories = (cloudData.categories && cloudData.categories.length > 0)
-                         ? cloudData.categories
-                         : [{ name: "工作", color: "#0071e3" }, { name: "学习", color: "#64d2ff" }, { name: "生活", color: "#5e5ce6" }, { name: "运动", color: "#30b0c7" }];
-            moods = cloudData.moods || {};
-            checkins = cloudData.checkins || {};
-            
-            // 主题和 MBTI
-            const savedTheme = cloudData.theme || 'default';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active'));
-            const activeCard = document.getElementById('theme-'+savedTheme);
-            if(activeCard) activeCard.classList.add('active');
-            
-            if(cloudData.mbti) localStorage.setItem('dailySenseMBTI', cloudData.mbti);
-
-            // 刷新所有界面
-            refreshThemeColors();
-            autoSetMonthRange();
-            renderCategories();
-            renderPicker();
-            renderMainCal();
-            const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
-            selectCalDate(todayStr);
-            renderMbtiSection();
-            checkMissedCheckins();
-            requestNotificationPermission();
-            
-            if (window.innerWidth <= 900) switchView('calendar');
-        }
-
-        // --- 4. 保存数据到云端 (Sync) ---
-        // 简单的防抖，防止打字时频繁请求
-        let saveTimeout;
-        function saveToCloud() {
-            if (!authToken) return;
-
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-                const payload = {
-                    tasks: tasks,
-                    categories: categories,
-                    moods: moods,
-                    checkins: checkins,
-                    theme: document.documentElement.getAttribute('data-theme'),
-                    mbti: localStorage.getItem('dailySenseMBTI') || ''
-                };
-
-                try {
-                    await fetch(`${API_URL}/api/sync`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                    console.log('☁️ 已同步到云端服务器');
-                } catch (error) {
-                    console.error('同步失败', error);
-                }
-            }, 1000);
-        }
-
-        // --- 5. 修改初始化逻辑 ---
-        async function initAppData() {
-            if (authToken) {
-                try {
-                    const res = await fetch(`${API_URL}/api/data`, {
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-                    if (res.ok) {
-                        const cloudData = await res.json();
-                        document.getElementById('auth-screen').style.display = 'none';
-                        document.body.classList.remove('auth-locked');
-                        document.getElementById('display-username').innerText = currentUser || 'User';
-                        loadDataToApp(cloudData);
-                    } else {
-                        handleLogout(); // Token 过期
-                    }
-                } catch (e) {
-                    console.error('Fetch error', e);
-                    // 即使失败，如果本地有 Token，也暂时不强制登出，可能只是断网
-                    alert('连接服务器失败，请检查网络');
-                }
-            } else {
-                // 无 Token，显示登录页
-                document.getElementById('auth-screen').style.display = 'flex';
-                document.body.classList.add('auth-locked');
-            }
-        }
-
-        // ==================== 数据核心 ====================
+        // ==================== 数据核心 (Variables, initially empty) ====================
         let tasks = [];
         let categories = [];
         let moods = {};
@@ -1401,14 +1284,47 @@
 
         let pickerDate = new Date(), calDate = new Date(), selectedDates = new Set(), pickerMode = 'single', sortMode = 'time', currentReviewData = [], quadrantDots = [], selectedPlanIds = new Set(), isBulkMode = false;
 
+        // Called AFTER Login
+        function initAppData() {
+            tasks = JSON.parse(localStorage.getItem(getDBKey('finalV20Tasks'))) || [];
+            categories = JSON.parse(localStorage.getItem(getDBKey('finalV20Cats')));
+            moods = JSON.parse(localStorage.getItem(getDBKey('dailySenseMoods'))) || {};
+            checkins = JSON.parse(localStorage.getItem(getDBKey('dailySenseCheckins'))) || {};
+
+            if (!categories) {
+                categories = [{ name: "工作", color: "#0071e3" }, { name: "学习", color: "#64d2ff" }, { name: "生活", color: "#5e5ce6" }, { name: "运动", color: "#30b0c7" }];
+                localStorage.setItem(getDBKey('finalV20Cats'), JSON.stringify(categories));
+            }
+            
+            // Load saved theme (User specific)
+            const savedTheme = localStorage.getItem(getDBKey('dailySenseTheme')) || 'default';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active'));
+            const activeCard = document.getElementById('theme-'+savedTheme);
+            if(activeCard) activeCard.classList.add('active');
+
+            refreshThemeColors();
+            autoSetMonthRange();
+            renderCategories();
+            renderPicker();
+            renderMainCal();
+            const now = new Date(); const todayStr = now.toISOString().split('T')[0];
+            selectCalDate(todayStr);
+            renderMbtiSection();
+            checkMissedCheckins();
+            requestNotificationPermission();
+            
+            // Reset view to default
+            if (window.innerWidth <= 900) switchView('calendar');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // PC Sidebar check
             if(window.innerWidth > 900) { document.getElementById('sidebar').classList.remove('closed'); } else { document.getElementById('sidebar').classList.add('closed'); }
             
-            // 尝试初始化数据（会调用云端）
-            initAppData();
-
             setInterval(scheduleNotifications, 30000);
 
+            // === 手机端初始化逻辑 ===
             if (window.innerWidth <= 900) {
                 document.body.addEventListener('click', function(e) {
                     if (e.target.closest('.info-icon')) {
@@ -1435,7 +1351,6 @@
             lastDate.setHours(0,0,0,0);
             const oneDay = 24 * 60 * 60 * 1000;
             const diffDays = Math.round((today - lastDate) / oneDay);
-            let hasChange = false;
             if (diffDays > 1) {
                 for (let i = 1; i < diffDays; i++) {
                     let missedDate = new Date(lastDate);
@@ -1443,10 +1358,9 @@
                     let mStr = missedDate.toISOString().split('T')[0];
                     if (!checkins[mStr]) {
                         checkins[mStr] = -3;
-                        hasChange = true;
                     }
                 }
-                if(hasChange) saveToCloud();
+                localStorage.setItem(getDBKey('dailySenseCheckins'), JSON.stringify(checkins));
             }
         }
 
@@ -1473,6 +1387,7 @@
                 div.className = 'nav-item-base';
                 div.innerHTML = `<span>${item.name}</span>`;
                 div.onclick = () => switchView(item.view);
+                // Check if active
                 if(document.getElementById('view-'+item.view).style.display === 'block') {
                     div.classList.add('active');
                 }
@@ -1493,13 +1408,16 @@
             const target = document.getElementById('view-' + viewName);
             if(target) { target.style.display = 'block'; setTimeout(() => target.classList.add('active-view'), 10); }
             
+            // Update Active States in Sidebar (PC)
             document.querySelectorAll('.nav-item-base').forEach(el => el.classList.remove('active'));
 
             if(viewName === 'add') document.getElementById('nav-add').classList.add('active');
             if(viewName === 'category') document.getElementById('nav-category').classList.add('active');
             if(viewName === 'mbti') document.getElementById('nav-mbti').classList.add('active');
 
+            // PC Sub-menu Logic
             if(['calendar', 'myplans'].includes(viewName)) {
+                // We are in Exec group
                 const subContent = document.getElementById('sub-menu-content');
                 if(subContent.children.length > 0 && document.getElementById('sidebar').classList.contains('sub-active')) {
                    Array.from(subContent.children).forEach(child => {
@@ -1509,6 +1427,7 @@
                 }
             }
              if(['summary', 'moodreport', 'levelup'].includes(viewName)) {
+                // We are in Analysis group
                 const subContent = document.getElementById('sub-menu-content');
                  if(subContent.children.length > 0 && document.getElementById('sidebar').classList.contains('sub-active')) {
                    Array.from(subContent.children).forEach(child => {
@@ -1518,26 +1437,32 @@
                 }
             }
 
-            const isAnalysisGroup = ['summary', 'moodreport', 'myplans', 'levelup'].includes(viewName);
-            const mobileTabs = document.getElementById('mobileAnalysisTabs');
-            
+            // === Mobile Navigation Logic ===
+            // 1. Bottom Nav Active State
             document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
             if(viewName === 'calendar') document.getElementById('mnav-calendar').classList.add('active');
             if(viewName === 'category') document.getElementById('mnav-custom').classList.add('active');
             if(viewName === 'mbti') document.getElementById('mnav-mbti').classList.add('active');
-
+            
+            // "Analysis" Group Handling for Mobile
+            const isAnalysisGroup = ['summary', 'moodreport', 'myplans', 'levelup'].includes(viewName);
+            const mobileTabs = document.getElementById('mobileAnalysisTabs');
+            
             if(isAnalysisGroup) {
                 document.getElementById('mnav-summary').classList.add('active');
-                mobileTabs.classList.remove('hidden');
+                mobileTabs.classList.remove('hidden'); // Show sub-menu tabs
+                
+                // Highlight active sub-tab
                 document.querySelectorAll('.analysis-tab-item').forEach(el => el.classList.remove('active'));
                 if(viewName === 'summary') document.getElementById('mtab-summary').classList.add('active');
                 if(viewName === 'moodreport') document.getElementById('mtab-moodreport').classList.add('active');
                 if(viewName === 'myplans') document.getElementById('mtab-myplans').classList.add('active');
                 if(viewName === 'levelup') document.getElementById('mtab-levelup').classList.add('active');
             } else {
-                mobileTabs.classList.add('hidden');
+                mobileTabs.classList.add('hidden'); // Hide sub-menu tabs
             }
 
+            // Init Views
             if(viewName === 'calendar') { renderMainCal(); const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(ds) { renderMoodEngine(ds); renderTodayGauge(ds); } }
             if(viewName === 'summary') { autoSetMonthRange(); renderSummary(); }
             if(viewName === 'mbti') { renderMbtiSection(); }
@@ -1664,7 +1589,15 @@
             }
         }
 
-        // ==================== 原有逻辑函数 (MODIFIED) ====================
+        function claimXP(dateStr, amount) {
+            if (checkins[dateStr] && checkins[dateStr] > 0) return;
+            checkins[dateStr] = amount;
+            localStorage.setItem(getDBKey('dailySenseCheckins'), JSON.stringify(checkins));
+            alert(`🎉 签到成功！获得 ${amount} XP`);
+            renderLevelUpView();
+        }
+
+        // ==================== 原有逻辑函数 (Modified for getDBKey) ====================
         function autoSetMonthRange() {
             const now = new Date(); const year = now.getFullYear(); const month = String(now.getMonth() + 1).padStart(2, '0'); const lastDay = new Date(year, now.getMonth() + 1, 0).getDate(); const startStr = `${year}-${month}-01`; const endStr = `${year}-${month}-${lastDay}`;
             document.getElementById('sumStart').value = startStr; document.getElementById('sumEnd').value = endStr;
@@ -1672,6 +1605,7 @@
             document.getElementById('moodReportStart').value = startStr; document.getElementById('moodReportEnd').value = endStr;
         }
         function openMbtiPage() {
+            // 将当前用户名传给测试页，如果没有登录则传空
             const userParam = currentUser ? '?user=' + encodeURIComponent(currentUser) : '';
             window.open('a_mbti_test.html' + userParam, '_blank');
         }
@@ -1680,34 +1614,16 @@
             if(mbtiCode && typeDetails[mbtiCode]) { const info = typeDetails[mbtiCode]; badge.innerText = mbtiCode; badge.style.color = "var(--theme-color)"; contentArea.innerHTML = `<div style="font-size: 60px; font-weight: 800; color: var(--theme-color); line-height: 1; margin-bottom: 5px;">${mbtiCode}</div><h2 style="margin-bottom: 5px;">${info.name}</h2><p style="color: var(--text-secondary); margin-bottom: 25px; font-weight: 500;">"${info.slogan}"</p><button class="btn btn-outline" style="padding:10px 25px;" onclick="openMbtiPage()">重新测试</button>`; } else { badge.innerText = "?"; badge.style.color = "var(--text-secondary)"; contentArea.innerHTML = `<h2 style="margin-bottom:10px;">探索你的性格类型</h2><p style="color:var(--text-secondary); margin-bottom:30px; max-width:400px;">基于荣格心理学维度的深度自我扫描，了解真实的自己，只需几分钟。</p><button class="btn btn-primary" style="padding:12px 30px; font-size:16px;" onclick="openMbtiPage()">点击测试你的MBTI</button>`; }
         }
         function requestNotificationPermission() { if ("Notification" in window) { if (Notification.permission !== "granted" && Notification.permission !== "denied") Notification.requestPermission(); } }
-        function scheduleNotifications() { if(!currentUser) return; if (Notification.permission !== "granted") return; const now = new Date(); let hasUpdate = false; tasks.forEach(t => { if (t.reminderTime && !t.notified) { const targetTime = new Date(t.reminderTime); if (now >= targetTime) { const diff = (now - targetTime) / 1000 / 60; if (diff < 5) { new Notification(`日程提醒: ${t.title}`, { body: `您的计划 [${t.title}] 即将开始！\n分类: ${t.category} | 时间: ${t.startTime}`, icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png' }); } t.notified = true; hasUpdate = true; } } }); if(hasUpdate) saveToCloud(); }
+        function scheduleNotifications() { if(!currentUser) return; if (Notification.permission !== "granted") return; const now = new Date(); let hasUpdate = false; tasks.forEach(t => { if (t.reminderTime && !t.notified) { const targetTime = new Date(t.reminderTime); if (now >= targetTime) { const diff = (now - targetTime) / 1000 / 60; if (diff < 5) { new Notification(`日程提醒: ${t.title}`, { body: `您的计划 [${t.title}] 即将开始！\n分类: ${t.category} | 时间: ${t.startTime}`, icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png' }); } t.notified = true; hasUpdate = true; } } }); if(hasUpdate) localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); }
         function toggleReminderOptions() { const toggle = document.getElementById('reminderToggle'); const options = document.getElementById('reminderOptions'); if (toggle.checked) { options.style.display = 'block'; requestNotificationPermission(); } else { options.style.display = 'none'; } }
-        
-        function setTheme(themeName) {
-            document.documentElement.setAttribute('data-theme', themeName);
-            // Theme save logic moved to saveToCloud via data-theme attribute
-            saveToCloud();
-            document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active'));
-            document.getElementById('theme-'+themeName).classList.add('active');
-            const newPalette = themePalettes[themeName];
-            if (newPalette) {
-                let changed = false;
-                categories.forEach(cat => { if (newPalette[cat.name]) { cat.color = newPalette[cat.name]; changed = true; } });
-                if (changed) {
-                    saveToCloud();
-                    renderCategories();
-                }
-            }
-            setTimeout(() => { refreshThemeColors(); refreshAll(); }, 50);
-        }
-
+        function setTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); localStorage.setItem(getDBKey('dailySenseTheme'), themeName); document.querySelectorAll('.theme-card').forEach(el => el.classList.remove('active')); document.getElementById('theme-'+themeName).classList.add('active'); const newPalette = themePalettes[themeName]; if (newPalette) { let changed = false; categories.forEach(cat => { if (newPalette[cat.name]) { cat.color = newPalette[cat.name]; changed = true; } }); if (changed) { localStorage.setItem(getDBKey('finalV20Cats'), JSON.stringify(categories)); renderCategories(); } } setTimeout(() => { refreshThemeColors(); refreshAll(); }, 50); }
         function refreshThemeColors() { const style = getComputedStyle(document.documentElement); priorities[0].color = style.getPropertyValue('--shade-1').trim(); priorities[1].color = style.getPropertyValue('--shade-2').trim(); priorities[2].color = style.getPropertyValue('--shade-3').trim(); priorities[3].color = style.getPropertyValue('--shade-4').trim(); priorities[4].color = style.getPropertyValue('--shade-5').trim(); renderPrioSelector(); const currentDateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(currentDateStr && document.getElementById('view-calendar').style.display === 'block') { renderMoodEngine(currentDateStr); renderTodayGauge(currentDateStr); } }
         function refreshAll() { if(document.getElementById('view-summary').style.display === 'block') renderSummary(); if(document.getElementById('view-calendar').style.display === 'block') renderMainCal(); if(document.getElementById('view-add').style.display === 'block') renderPrioSelector(); if(document.getElementById('view-myplans').style.display === 'block') renderMyPlans(); if(document.getElementById('view-moodreport').style.display === 'block') renderMoodReport(); }
         function getColor(catName) { const cat = categories.find(c => c.name === catName); return cat ? cat.color : '#999'; }
         function renderCategories() { const sel = document.getElementById('inputCategory'); const quickSel = document.getElementById('quickAddCategory'); sel.innerHTML = ''; quickSel.innerHTML = ''; categories.forEach(c => { const opt = `<option value="${c.name}">${c.name}</option>`; sel.innerHTML += opt; quickSel.innerHTML += opt; }); const cont = document.getElementById('catContainer'); if(cont) { cont.innerHTML = ''; categories.forEach((c, i) => { const div = document.createElement('div'); div.className = 'cat-chip'; div.style.borderColor = c.color; div.innerHTML = `<input type="color" class="color-picker-input" value="${c.color}" onchange="updateCatColor(${i}, this.value)"><span style="color:${c.color}">${c.name}</span><span onclick="delCat(${i})" style="color:#ccc; margin-left:5px;">✕</span>`; cont.appendChild(div); }); } }
-        window.updateCatColor = function(index, newColor) { categories[index].color = newColor; saveToCloud(); renderCategories(); refreshAll(); };
-        function addCategory() { const v = document.getElementById('newCatInput').value.trim(); if(v && !categories.find(c => c.name === v)) { const rndColor = palette[Math.floor(Math.random() * palette.length)]; categories.push({ name: v, color: rndColor }); saveToCloud(); renderCategories(); } }
-        window.delCat = function(i) { if(confirm('删除?')) { categories.splice(i,1); saveToCloud(); renderCategories(); } };
+        window.updateCatColor = function(index, newColor) { categories[index].color = newColor; localStorage.setItem(getDBKey('finalV20Cats'), JSON.stringify(categories)); renderCategories(); refreshAll(); };
+        function addCategory() { const v = document.getElementById('newCatInput').value.trim(); if(v && !categories.find(c => c.name === v)) { const rndColor = palette[Math.floor(Math.random() * palette.length)]; categories.push({ name: v, color: rndColor }); localStorage.setItem(getDBKey('finalV20Cats'), JSON.stringify(categories)); renderCategories(); } }
+        window.delCat = function(i) { if(confirm('删除?')) { categories.splice(i,1); localStorage.setItem(getDBKey('finalV20Cats'), JSON.stringify(categories)); renderCategories(); } };
         function renderPrioSelector() { const container = document.getElementById('prioSelector'); container.innerHTML = ''; priorities.forEach(p => { const btn = document.createElement('div'); btn.className = 'prio-btn'; if(p.val === document.getElementById('inputPriority').value) { btn.classList.add('active'); btn.style.background = p.color; } btn.innerText = p.label; btn.onclick = () => { document.querySelectorAll('.prio-btn').forEach(b => { b.classList.remove('active'); b.style.background = 'transparent'; }); btn.classList.add('active'); btn.style.background = p.color; document.getElementById('inputPriority').value = p.val; }; container.appendChild(btn); }); }
         function toggleDatePicker() { const el = document.getElementById('datePickerWrapper'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
         function setPickerMode(mode) { pickerMode = mode; selectedDates.clear(); document.getElementById('modeSingle').className = mode === 'single' ? 'mode-btn active' : 'mode-btn'; document.getElementById('modeRange').className = mode === 'range' ? 'mode-btn active' : 'mode-btn'; renderPicker(); updateDateSummary(); }
@@ -1716,14 +1632,14 @@
         let rangeStart = null;
         function handleDateClick(dateStr) { if(pickerMode === 'single') { if(selectedDates.has(dateStr)) selectedDates.delete(dateStr); else selectedDates.add(dateStr); } else { if(!rangeStart) { rangeStart = dateStr; selectedDates.clear(); selectedDates.add(dateStr); } else { let start = new Date(rangeStart), end = new Date(dateStr); if(start > end) [start, end] = [end, start]; selectedDates.clear(); while(start <= end) { selectedDates.add(start.toISOString().split('T')[0]); start.setDate(start.getDate()+1); } rangeStart = null; } } renderPicker(); updateDateSummary(); }
         function updateDateSummary() { document.getElementById('selectedCount').innerText = selectedDates.size; document.getElementById('dateSummary').innerText = selectedDates.size > 0 ? `已选 ${selectedDates.size} 天` : ''; }
-        function addNewTask() { const title = document.getElementById('inputTitle').value; const cat = document.getElementById('inputCategory').value; const priority = document.getElementById('inputPriority').value; const sTime = document.getElementById('inputStartTime').value; const eTime = document.getElementById('inputEndTime').value; const needReminder = document.getElementById('reminderToggle').checked; const reminderOffset = parseInt(document.getElementById('reminderOffsetSelect').value); if(!title || selectedDates.size === 0) return alert("请填写标题并选择日期"); selectedDates.forEach(dateStr => { let rTime = null; if(needReminder) { const startDateTime = new Date(`${dateStr}T${sTime}:00`); rTime = new Date(startDateTime.getTime() - reminderOffset * 60000).toISOString(); } tasks.push({ id: Date.now() + Math.random(), title, category: cat, priority, date: dateStr, startTime: sTime, endTime: eTime, progress: 0, reminderTime: rTime, notified: false }); }); saveToCloud(); alert(`已生成 ${selectedDates.size} 条日程${needReminder ? '并设置了提醒' : ''}`); selectedDates.clear(); document.getElementById('inputTitle').value = ''; document.getElementById('reminderToggle').checked = false; document.getElementById('reminderOptions').style.display = 'none'; renderPicker(); updateDateSummary(); document.getElementById('datePickerWrapper').style.display = 'none'; }
+        function addNewTask() { const title = document.getElementById('inputTitle').value; const cat = document.getElementById('inputCategory').value; const priority = document.getElementById('inputPriority').value; const sTime = document.getElementById('inputStartTime').value; const eTime = document.getElementById('inputEndTime').value; const needReminder = document.getElementById('reminderToggle').checked; const reminderOffset = parseInt(document.getElementById('reminderOffsetSelect').value); if(!title || selectedDates.size === 0) return alert("请填写标题并选择日期"); selectedDates.forEach(dateStr => { let rTime = null; if(needReminder) { const startDateTime = new Date(`${dateStr}T${sTime}:00`); rTime = new Date(startDateTime.getTime() - reminderOffset * 60000).toISOString(); } tasks.push({ id: Date.now() + Math.random(), title, category: cat, priority, date: dateStr, startTime: sTime, endTime: eTime, progress: 0, reminderTime: rTime, notified: false }); }); localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); alert(`已生成 ${selectedDates.size} 条日程${needReminder ? '并设置了提醒' : ''}`); selectedDates.clear(); document.getElementById('inputTitle').value = ''; document.getElementById('reminderToggle').checked = false; document.getElementById('reminderOptions').style.display = 'none'; renderPicker(); updateDateSummary(); document.getElementById('datePickerWrapper').style.display = 'none'; }
         function calChangeMonth(d) { calDate.setMonth(calDate.getMonth()+d); renderMainCal(); }
         function renderMainCal() { const y = calDate.getFullYear(), m = calDate.getMonth(); document.getElementById('calMonthStr').innerText = `${y}年 ${m+1}月`; const grid = document.getElementById('mainCalGrid'); grid.innerHTML = ''; const headRow = document.getElementById('calHeaderRow'); if(headRow.innerHTML === '') ["日","一","二","三","四","五","六"].forEach(d => headRow.innerHTML += `<div class="cal-week-head">${d}</div>`); const first = new Date(y, m, 1).getDay(); const total = new Date(y, m+1, 0).getDate(); const todayStr = new Date().toISOString().split('T')[0]; const currentSelected = document.getElementById('selectedDateStr').innerText.split(' ')[0]; for(let i=0; i<first; i++) grid.innerHTML += `<div></div>`; for(let d=1; d<=total; d++) { const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const dayTasks = tasks.filter(t => t.date === dateStr); let classes = "cal-day"; if(dateStr === todayStr) classes += " today"; if(dateStr === currentSelected) classes += " active"; let contentHTML = ''; if(dayTasks.length > 0) { let totalP = 0; dayTasks.forEach(t => totalP += parseInt(t.progress)); let dayPct = Math.round(totalP / (dayTasks.length * 100) * 100); const themeColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim(); let dotsHTML = '<div class="cal-dots-row">'; dayTasks.forEach(t => { const c = getColor(t.category); dotsHTML += `<div class="cal-dot" style="background:${c}"></div>`; }); dotsHTML += '</div>'; contentHTML = `<div class="cal-day-content"><div class="cal-day-prog-track"><div class="cal-day-prog-fill" style="width:${dayPct}%; background:linear-gradient(to right, ${themeColor} 0%, ${themeColor}aa 100%);"></div></div><div class="cal-day-pct">${dayPct}%</div>${dotsHTML}</div>`; } else { contentHTML = `<div></div>`; } grid.innerHTML += `<div class="${classes}" id="cday-${dateStr}" onclick="selectCalDate('${dateStr}')"><span class="cal-date-num">${d}</span>${contentHTML}</div>`; } }
         function changeSort(mode, btn) { sortMode = mode; document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(ds && ds.indexOf('-') > -1) selectCalDate(ds); }
         function selectCalDate(dateStr) { const prev = document.querySelector('.cal-day.active'); if(prev) prev.classList.remove('active'); const currentEl = document.getElementById(`cday-${dateStr}`); if(currentEl) currentEl.classList.add('active'); const dObj = new Date(dateStr); document.getElementById('selectedDateStr').innerText = `${dateStr} ${weekDayNames[dObj.getDay()]}`; const list = document.getElementById('calendarTaskList'); let htmlContent = ''; let dayTasks = tasks.filter(t => t.date === dateStr).slice(); if(sortMode === 'time') dayTasks.sort((a,b) => a.startTime.localeCompare(b.startTime)); else if (sortMode === 'priority') dayTasks.sort((a,b) => (priorities.find(p=>p.val===b.priority)?.weight||0) - (priorities.find(p=>p.val===a.priority)?.weight||0)); else if (sortMode === 'progress') dayTasks.sort((a,b) => a.progress - b.progress); if(dayTasks.length === 0) { htmlContent += `<div style="text-align:center; color:var(--text-secondary); padding:20px 0;">今日暂无计划 ☕️</div>`; } dayTasks.forEach(t => { const color = getColor(t.category); const pObj = priorities.find(p => p.val === t.priority) || priorities[2]; const gradColor = `linear-gradient(to right, ${color} 0%, ${color} ${t.progress}%, #e5e5ea ${t.progress}%, #e5e5ea 100%)`; htmlContent += `<div class="timeline-row"><div class="timeline-time-col"><div class="t-start">${t.startTime}</div><div class="t-end">${t.endTime}</div></div><div class="timeline-axis-col"><div class="timeline-line"></div><div class="timeline-dot" style="border-color:${color};"></div></div><div class="timeline-card-col"><div class="task-card"><div class="task-left"><div class="task-title ${t.progress==100?'task-done-title':''}">${t.title}</div><div class="task-meta"><span class="priority-badge" style="background:${pObj.color}">${pObj.label}</span><div style="display:flex;align-items:center;gap:3px; background:${color}15; padding:2px 6px; border-radius:4px;"><span style="width:6px;height:6px;border-radius:50%;background:${color}"></span><span style="color:${color}; font-size:11px;">${t.category}</span><div class="action-badge" style="color:${color};" onclick="openEditModal('${t.id}')">修改</div></div></div></div><div class="task-right"><div class="progress-label"><span>执行进度</span><span style="font-weight:700; color:${color}">${t.progress}%</span></div><div class="slider-wrapper"><input type="range" min="0" max="100" value="${t.progress}" data-color="${color}" style="background:${gradColor};" oninput="updateTask(${t.id}, this.value, this)"></div></div></div></div></div>`; }); const connectorLine = dayTasks.length > 0 ? '<div style="width:2px; height:20px; background:var(--border);"></div>' : ''; htmlContent += `<div class="timeline-row" style="align-items: flex-start; margin-top: -10px;"><div class="timeline-time-col"></div><div class="timeline-axis-col" style="display:flex; flex-direction:column; align-items:center; overflow:visible;">${connectorLine}<div class="add-btn-container" onclick="openQuickAdd('${dateStr}')"><div class="timeline-add-circle">➕</div><div class="timeline-add-text">增加计划</div></div></div><div class="timeline-card-col"></div></div>`; list.innerHTML = htmlContent; drawDayGantt(dateStr, dayTasks); renderMoodEngine(dateStr); renderTodayGauge(dateStr); }
-        function updateTask(id, val, el) { const t = tasks.find(x => x.id === id); if(t) { t.progress = parseInt(val); const label = el.parentElement.previousElementSibling.querySelector('span:last-child'); if(label) label.innerText = val + '%'; const color = el.getAttribute('data-color'); el.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${val}%, #e5e5ea ${val}%, #e5e5ea 100%)`; const card = el.closest('.task-card'); const title = card.querySelector('.task-title'); val == 100 ? title.classList.add('task-done-title') : title.classList.remove('task-done-title'); saveToCloud(); const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0]; renderTodayGauge(ds); } }
-        function handleMoodClick(e) { const pad = document.getElementById('moodPad'); const rect = pad.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; const pctX = (x / rect.width) * 100; const pctY = (y / rect.height) * 100; const dateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(!dateStr || dateStr.indexOf('-') === -1) return; if(!moods[dateStr]) moods[dateStr] = { x: 50, y: 50, word: "" }; moods[dateStr].x = pctX; moods[dateStr].y = pctY; saveToCloud(); updateMoodVisuals(pctX, pctY); }
-        function saveMoodData() { const dateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0]; const word = document.getElementById('moodWord').value; if(!dateStr) return; if(!moods[dateStr]) moods[dateStr] = { x: 50, y: 50, word: "" }; moods[dateStr].word = word; saveToCloud(); }
+        function updateTask(id, val, el) { const t = tasks.find(x => x.id === id); if(t) { t.progress = parseInt(val); const label = el.parentElement.previousElementSibling.querySelector('span:last-child'); if(label) label.innerText = val + '%'; const color = el.getAttribute('data-color'); el.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${val}%, #e5e5ea ${val}%, #e5e5ea 100%)`; const card = el.closest('.task-card'); const title = card.querySelector('.task-title'); val == 100 ? title.classList.add('task-done-title') : title.classList.remove('task-done-title'); localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); const ds = document.getElementById('selectedDateStr').innerText.split(' ')[0]; renderTodayGauge(ds); } }
+        function handleMoodClick(e) { const pad = document.getElementById('moodPad'); const rect = pad.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; const pctX = (x / rect.width) * 100; const pctY = (y / rect.height) * 100; const dateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0]; if(!dateStr || dateStr.indexOf('-') === -1) return; if(!moods[dateStr]) moods[dateStr] = { x: 50, y: 50, word: "" }; moods[dateStr].x = pctX; moods[dateStr].y = pctY; localStorage.setItem(getDBKey('dailySenseMoods'), JSON.stringify(moods)); updateMoodVisuals(pctX, pctY); }
+        function saveMoodData() { const dateStr = document.getElementById('selectedDateStr').innerText.split(' ')[0]; const word = document.getElementById('moodWord').value; if(!dateStr) return; if(!moods[dateStr]) moods[dateStr] = { x: 50, y: 50, word: "" }; moods[dateStr].word = word; localStorage.setItem(getDBKey('dailySenseMoods'), JSON.stringify(moods)); }
         function renderMoodEngine(dateStr) { const data = moods[dateStr] || { x: 50, y: 50, word: "" }; updateMoodVisuals(data.x, data.y); document.getElementById('moodWord').value = data.word; }
         function updateMoodVisuals(x, y) { const cursor = document.getElementById('moodCursor'); const pad = document.getElementById('moodPad'); cursor.style.left = x + '%'; cursor.style.top = y + '%'; pad.style.setProperty('--mood-x', x + '%'); pad.style.setProperty('--mood-y', y + '%'); }
         function renderTodayGauge(dateStr) { const canvas = document.getElementById('todayGaugeCanvas'); if(!canvas) return; const ctx = canvas.getContext('2d'); const dpr = window.devicePixelRatio || 1; const width = 240; const height = 140; canvas.style.width = width + "px"; canvas.style.height = height + "px"; canvas.width = width * dpr; canvas.height = height * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const dayTasks = tasks.filter(t => t.date === dateStr); let totalProg = 0; let maxProg = dayTasks.length * 100; dayTasks.forEach(t => totalProg += t.progress); let pct = 0; if (maxProg > 0) { pct = totalProg / maxProg; } else if (dayTasks.length === 0) { pct = 0; } const cx = width / 2; const cy = height - 15; const r = 80; const themeColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim(); const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim(); ctx.clearRect(0, 0, width, height); ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 0); ctx.lineWidth = 14; ctx.lineCap = "round"; ctx.strokeStyle = "#eee"; ctx.stroke(); if(pct > 0) { ctx.beginPath(); const endAngle = Math.PI + (Math.PI * Math.max(pct, 0.01)); ctx.arc(cx, cy, r, Math.PI, endAngle); ctx.lineWidth = 14; ctx.lineCap = "round"; ctx.strokeStyle = themeColor; ctx.stroke(); } ctx.fillStyle = textColor; ctx.font = "bold 32px -apple-system, BlinkMacSystemFont, sans-serif"; ctx.textAlign = "center"; ctx.fillText(Math.round(pct * 100) + "%", cx, cy - 25); ctx.fillStyle = "#86868b"; ctx.font = "12px -apple-system, BlinkMacSystemFont, sans-serif"; if(dayTasks.length === 0) { ctx.fillText("今日无计划", cx, cy); } else { ctx.fillText(`已完成: ${dayTasks.filter(t=>t.progress===100).length}/${dayTasks.length}`, cx, cy); } }
@@ -1736,20 +1652,20 @@
         function drawSingleRadar(canvasId, values, labels, color, titleText) { const cvs = document.getElementById(canvasId); const ctx = cvs.getContext('2d'); const dpr = window.devicePixelRatio || 1; const w = 300, h = 300; cvs.style.width = w + 'px'; cvs.style.height = h + 'px'; cvs.width = w * dpr; cvs.height = h * dpr; ctx.scale(dpr, dpr); const cx = w/2, cy = h/2, r = 100; ctx.clearRect(0,0,w,h); ctx.strokeStyle = "#eee"; ctx.lineWidth = 1; for(let level=1; level<=4; level++) { ctx.beginPath(); for(let i=0; i<7; i++) { const ang = (Math.PI*2 * i)/7 - Math.PI/2; const rad = (r/4)*level; ctx[i===0?'moveTo':'lineTo'](cx + Math.cos(ang)*rad, cy + Math.sin(ang)*rad); } ctx.closePath(); ctx.stroke(); } ctx.fillStyle = "#666"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font = "11px sans-serif"; for(let i=0; i<7; i++) { const ang = (Math.PI*2 * i)/7 - Math.PI/2; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r); ctx.stroke(); ctx.fillText(labels[i], cx+Math.cos(ang)*(r+20), cy+Math.sin(ang)*(r+20)); } ctx.beginPath(); for(let i=0; i<7; i++) { const ang = (Math.PI*2 * i)/7 - Math.PI/2; const rad = (values[i]/100)*r; ctx[i===0?'moveTo':'lineTo'](cx + Math.cos(ang)*rad, cy + Math.sin(ang)*rad); } ctx.closePath(); ctx.fillStyle = color; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1.0; ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = color; ctx.font = "bold 14px sans-serif"; ctx.fillText(titleText, cx, h - 10); }
         function openEditModal(id) { const t = tasks.find(x => x.id == id); if(!t) return; document.getElementById('editTaskId').value = id; document.getElementById('editTitle').value = t.title; document.getElementById('editDate').value = t.date; document.getElementById('editPriority').value = t.priority; document.getElementById('editModal').style.display = 'flex'; }
         function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
-        function saveEdit() { const id = document.getElementById('editTaskId').value; const t = tasks.find(x => x.id == id); if(t) { t.title = document.getElementById('editTitle').value; t.date = document.getElementById('editDate').value; t.priority = document.getElementById('editPriority').value; saveToCloud(); refreshAll(); closeEditModal(); } }
-        function deleteTask() { if(!confirm("确定要删除吗？")) return; const id = document.getElementById('editTaskId').value; tasks = tasks.filter(t => t.id != id); saveToCloud(); refreshAll(); closeEditModal(); }
+        function saveEdit() { const id = document.getElementById('editTaskId').value; const t = tasks.find(x => x.id == id); if(t) { t.title = document.getElementById('editTitle').value; t.date = document.getElementById('editDate').value; t.priority = document.getElementById('editPriority').value; localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); refreshAll(); closeEditModal(); } }
+        function deleteTask() { if(!confirm("确定要删除吗？")) return; const id = document.getElementById('editTaskId').value; tasks = tasks.filter(t => t.id != id); localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); refreshAll(); closeEditModal(); }
         function openQuickAdd(dateStr) { document.getElementById('quickAddDate').value = dateStr; document.getElementById('quickAddTitle').value = ''; document.getElementById('quickAddStart').value = "09:00"; document.getElementById('quickAddEnd').value = "10:00"; document.getElementById('quickAddReminder').checked = false; document.getElementById('quickAddModal').style.display = 'flex'; document.getElementById('quickAddTitle').focus(); }
         function closeQuickAdd() { document.getElementById('quickAddModal').style.display = 'none'; }
-        function saveQuickAdd() { const dateStr = document.getElementById('quickAddDate').value; const title = document.getElementById('quickAddTitle').value.trim(); const cat = document.getElementById('quickAddCategory').value; const priority = document.getElementById('quickAddPriority').value; const sTime = document.getElementById('quickAddStart').value; const eTime = document.getElementById('quickAddEnd').value; const reminder = document.getElementById('quickAddReminder').checked; if(!title) return alert("请输入计划内容"); let rTime = null; if(reminder) { const startDateTime = new Date(`${dateStr}T${sTime}:00`); rTime = new Date(startDateTime.getTime() - 5 * 60000).toISOString(); } tasks.push({ id: Date.now() + Math.random(), title, category: cat, priority, date: dateStr, startTime: sTime, endTime: eTime, progress: 0, reminderTime: rTime, notified: false }); saveToCloud(); closeQuickAdd(); renderMainCal(); selectCalDate(dateStr); if(document.getElementById('view-myplans').style.display === 'block') renderMyPlans(); }
+        function saveQuickAdd() { const dateStr = document.getElementById('quickAddDate').value; const title = document.getElementById('quickAddTitle').value.trim(); const cat = document.getElementById('quickAddCategory').value; const priority = document.getElementById('quickAddPriority').value; const sTime = document.getElementById('quickAddStart').value; const eTime = document.getElementById('quickAddEnd').value; const reminder = document.getElementById('quickAddReminder').checked; if(!title) return alert("请输入计划内容"); let rTime = null; if(reminder) { const startDateTime = new Date(`${dateStr}T${sTime}:00`); rTime = new Date(startDateTime.getTime() - 5 * 60000).toISOString(); } tasks.push({ id: Date.now() + Math.random(), title, category: cat, priority, date: dateStr, startTime: sTime, endTime: eTime, progress: 0, reminderTime: rTime, notified: false }); localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); closeQuickAdd(); renderMainCal(); selectCalDate(dateStr); if(document.getElementById('view-myplans').style.display === 'block') renderMyPlans(); }
         function drawDayGantt(dateStr, dayTasks) { const canvas = document.getElementById('dayGanttCanvas'); const ctx = canvas.getContext('2d'); const data = dayTasks.slice().sort((a,b) => a.startTime.localeCompare(b.startTime)); const taskColW = 150, barAreaW = 800, rowH = 40, headH = 30; const totalW = taskColW + barAreaW, totalH = headH + (Math.max(data.length, 1) * rowH) + 10; const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim(); const dpr = window.devicePixelRatio || 1; canvas.width = totalW * dpr; canvas.height = totalH * dpr; canvas.style.width = '100%'; canvas.style.height = 'auto'; ctx.scale(dpr, dpr); ctx.clearRect(0,0,totalW,totalH); ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; ctx.textAlign = "center"; for(let h=0; h<=24; h+=2) { const x = taskColW + (h/24 * barAreaW); ctx.fillText(h, x, 20); ctx.beginPath(); ctx.moveTo(x, headH); ctx.lineTo(x, totalH); ctx.strokeStyle = "#f0f0f0"; ctx.stroke(); } ctx.beginPath(); ctx.moveTo(0,headH); ctx.lineTo(totalW,headH); ctx.strokeStyle = "#e5e5ea"; ctx.stroke(); if(data.length === 0) { ctx.fillStyle = "#ccc"; ctx.textAlign = "center"; ctx.fillText("无数据", totalW/2, totalH/2); return; } let y = headH; data.forEach((t, i) => { if(i%2===0) { ctx.fillStyle = "rgba(0,0,0,0.03)"; ctx.fillRect(0, y, totalW, rowH); } ctx.fillStyle = textColor; ctx.textAlign = "left"; ctx.font = "12px sans-serif"; let title = t.title; if(title.length > 12) title = title.substring(0,11)+".."; ctx.fillText(title, 10, y+24); const sM = parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1]); const eM = parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1]); let dur = eM - sM; if(dur<0) dur = 0; const barX = taskColW + (sM/1440 * barAreaW), barW = Math.max(dur/1440 * barAreaW, 4), color = getColor(t.category); ctx.fillStyle = color; roundRect(ctx, barX, y+10, barW, 20, 4); if(t.progress > 0) { ctx.fillStyle = "rgba(255,255,255,0.4)"; roundRect(ctx, barX, y+10, barW * (t.progress/100), 20, 4); } y += rowH; }); }
         function renderMyPlans() { const container = document.getElementById('myPlansContent'); const searchVal = document.getElementById('myPlansSearch').value.toLowerCase(); const viewMode = document.getElementById('myPlansViewMode').value; const sStr = document.getElementById('myPlanStart').value; const eStr = document.getElementById('myPlanEnd').value; container.innerHTML = ''; updateBulkActionBar(); if (isBulkMode) container.classList.add('bulk-mode'); else container.classList.remove('bulk-mode'); let filteredTasks = tasks.filter(t => { if (searchVal && !t.title.toLowerCase().includes(searchVal)) return false; if (t.date < sStr || t.date > eStr) return false; return true; }); let groups = {}, groupKeys = []; if (viewMode === 'date') { const now = new Date(); const year = now.getFullYear(); const month = String(now.getMonth() + 1).padStart(2, '0'); const day = String(now.getDate()).padStart(2, '0'); const todayStr = `${year}-${month}-${day}`; const currentDay = now.getDay() || 7; const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + (7 - currentDay)); const weekEndStr = weekEnd.toISOString().split('T')[0]; const nextWeekStart = new Date(weekEnd); nextWeekStart.setDate(weekEnd.getDate() + 1); const nextWeekStartStr = nextWeekStart.toISOString().split('T')[0]; const nextWeekEnd = new Date(nextWeekStart); nextWeekEnd.setDate(nextWeekStart.getDate() + 6); const nextWeekEndStr = nextWeekEnd.toISOString().split('T')[0]; groups = { past: { name: '过去', items: [] }, thisWeek: { name: '本周', items: [] }, today: { name: '今日', items: [] }, nextWeek: { name: '下周', items: [] }, later: { name: '以后', items: [] } }; groupKeys = ['past', 'thisWeek', 'today', 'nextWeek', 'later']; filteredTasks.forEach(t => { const tDateStr = t.date; if (tDateStr < todayStr) groups.past.items.push(t); else if (tDateStr === todayStr) groups.today.items.push(t); else if (tDateStr <= weekEndStr) groups.thisWeek.items.push(t); else if (tDateStr >= nextWeekStartStr && tDateStr <= nextWeekEndStr) groups.nextWeek.items.push(t); else groups.later.items.push(t); }); } else if (viewMode === 'priority') { groups = { highest: { name: '最高', items: [] }, high: { name: '偏高', items: [] }, medium: { name: '适中', items: [] }, low: { name: '偏低', items: [] }, lowest: { name: '最低', items: [] } }; groupKeys = ['highest', 'high', 'medium', 'low', 'lowest']; filteredTasks.forEach(t => { if (groups[t.priority]) groups[t.priority].items.push(t); else groups.medium.items.push(t); }); } else if (viewMode === 'status') { groups = { done: { name: '已完成 (100%)', items: [] }, p80: { name: '80% 以上', items: [] }, p60: { name: '60% 以上', items: [] }, p40: { name: '40% 以上', items: [] }, p20: { name: '20% 以上', items: [] }, started: { name: '20% 以下 (起步)', items: [] }, unstarted: { name: '未开始 (0%)', items: [] } }; groupKeys = ['done', 'p80', 'p60', 'p40', 'p20', 'started', 'unstarted']; filteredTasks.forEach(t => { const p = t.progress; if (p === 100) groups.done.items.push(t); else if (p >= 80) groups.p80.items.push(t); else if (p >= 60) groups.p60.items.push(t); else if (p >= 40) groups.p40.items.push(t); else if (p >= 20) groups.p20.items.push(t); else if (p > 0) groups.started.items.push(t); else groups.unstarted.items.push(t); }); } const sortFn = (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime); groupKeys.forEach((key, index) => { const group = groups[key]; group.items.sort(sortFn); const opacity = Math.max(0.4, 1 - (index * 0.1)); const headerColorStyle = `color: var(--theme-color); opacity: ${opacity};`; const section = document.createElement('div'); section.className = 'plan-group'; if (viewMode === 'date') { if (key !== 'today') section.classList.add('collapsed'); } else { section.classList.add('collapsed'); } section.innerHTML = `<div class="group-header" onclick="toggleGroup(this)" style="${headerColorStyle}"><div class="arrow-icon" style="border-color: currentColor;"></div><div class="group-name">${group.name} <span class="group-count" style="color:var(--text-secondary); opacity:0.8;">${group.items.length}</span></div></div><div class="group-content"><table class="plan-table"><thead><tr><th class="col-check"><input type="checkbox" onclick="toggleSelectGroup(this, '${key}')"></th><th class="col-date">计划日期</th><th class="col-time">计划时间</th><th class="col-title">计划内容</th><th class="col-prio">优先级</th><th class="col-prog">完成进度</th><th class="col-cat">项目类型</th></tr></thead><tbody id="tbody-${key}"></tbody></table></div>`; container.appendChild(section); const tbody = section.querySelector(`#tbody-${key}`); if (group.items.length > 0) { group.items.forEach(t => { const row = document.createElement('tr'); let prioOpts = ''; priorities.forEach(p => { prioOpts += `<option value="${p.val}" ${t.priority === p.val ? 'selected' : ''}>${p.label}</option>`; }); let catOpts = ''; categories.forEach(c => { catOpts += `<option value="${c.name}" ${t.category === c.name ? 'selected' : ''}>${c.name}</option>`; }); const catColor = getColor(t.category); const isChecked = selectedPlanIds.has(String(t.id)) ? 'checked' : ''; row.innerHTML = `<td class="col-check"><input type="checkbox" class="plan-checkbox" value="${t.id}" ${isChecked} onchange="handlePlanSelect(this)"></td><td><input type="date" class="table-input" value="${t.date}" onchange="updatePlanField('${t.id}', 'date', this.value)"></td><td><input type="time" class="table-input" value="${t.startTime}" onchange="updatePlanField('${t.id}', 'startTime', this.value)"></td><td><input type="text" class="table-input" value="${t.title}" onchange="updatePlanField('${t.id}', 'title', this.value)"></td><td><select class="table-input" style="background:${priorities.find(p=>p.val===t.priority)?.color}20; color:${priorities.find(p=>p.val===t.priority)?.color}; font-weight:600;" onchange="updatePlanField('${t.id}', 'priority', this.value)">${prioOpts}</select></td><td><div class="prog-cell"><div class="table-prog-track"><div class="table-prog-bar-fill" style="width:${t.progress}%; background:${catColor}"></div></div><span style="font-size:12px; margin-left:8px; color:var(--text-secondary); width:35px; text-align:right;">${t.progress}%</span></div></td><td><div style="display:flex; align-items:center;"><div class="status-dot" style="background:${catColor}"></div><select class="table-input" style="width:auto;" onchange="updatePlanField('${t.id}', 'category', this.value)">${catOpts}</select></div></td>`; tbody.appendChild(row); }); } }); }
         function toggleGroup(header) { header.parentElement.classList.toggle('collapsed'); }
-        function updatePlanField(id, field, value) { const t = tasks.find(x => x.id == id); if (t) { if(field === 'progress') value = parseInt(value); t[field] = value; saveToCloud(); const mode = document.getElementById('myPlansViewMode').value; if (field === 'date' || (mode === 'priority' && field === 'priority') || (mode === 'status' && field === 'progress')) { renderMyPlans(); } else { if(field === 'category' || field === 'priority') refreshAll(); } } }
+        function updatePlanField(id, field, value) { const t = tasks.find(x => x.id == id); if (t) { if(field === 'progress') value = parseInt(value); t[field] = value; localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); const mode = document.getElementById('myPlansViewMode').value; if (field === 'date' || (mode === 'priority' && field === 'priority') || (mode === 'status' && field === 'progress')) { renderMyPlans(); } else { if(field === 'category' || field === 'priority') refreshAll(); } } }
         function toggleBulkMode() { isBulkMode = !isBulkMode; const btn = document.getElementById('btnToggleBulk'); const container = document.getElementById('myPlansContent'); if(isBulkMode) { btn.innerText = "取消删除"; btn.classList.add('btn-secondary'); btn.classList.remove('btn-outline'); container.classList.add('bulk-mode'); } else { btn.innerText = "批量删除"; btn.classList.remove('btn-secondary'); btn.classList.add('btn-outline'); container.classList.remove('bulk-mode'); selectedPlanIds.clear(); updateBulkActionBar(); document.querySelectorAll('.plan-checkbox').forEach(cb => cb.checked = false); } }
         function toggleSelectGroup(masterCheckbox, groupKey) { const tbody = document.getElementById(`tbody-${groupKey}`); if(!tbody) return; const boxes = tbody.querySelectorAll('.plan-checkbox'); boxes.forEach(box => { box.checked = masterCheckbox.checked; handlePlanSelect(box, false); }); updateBulkActionBar(); }
         function handlePlanSelect(checkbox, updateBar = true) { const id = checkbox.value; if (checkbox.checked) selectedPlanIds.add(id); else selectedPlanIds.delete(id); if (updateBar) updateBulkActionBar(); }
         function updateBulkActionBar() { const bar = document.getElementById('bulkActionsBar'); document.getElementById('selectedPlanCount').innerText = selectedPlanIds.size; if (selectedPlanIds.size > 0 && isBulkMode) bar.classList.add('show'); else bar.classList.remove('show'); }
-        function deleteSelectedPlans() { if (!confirm(`确定要删除选中的 ${selectedPlanIds.size} 项计划吗？`)) return; tasks = tasks.filter(t => !selectedPlanIds.has(String(t.id))); saveToCloud(); toggleBulkMode(); renderMyPlans(); refreshAll(); }
+        function deleteSelectedPlans() { if (!confirm(`确定要删除选中的 ${selectedPlanIds.size} 项计划吗？`)) return; tasks = tasks.filter(t => !selectedPlanIds.has(String(t.id))); localStorage.setItem(getDBKey('finalV20Tasks'), JSON.stringify(tasks)); toggleBulkMode(); renderMyPlans(); refreshAll(); }
         function renderSummary() { const s = document.getElementById('sumStart').value; const e = document.getElementById('sumEnd').value; const data = tasks.filter(t => t.date >= s && t.date <= e); currentReviewData = data; const catSel = document.getElementById('reviewCatFilter'); catSel.innerHTML = '<option value="all">所有项目</option>'; categories.forEach(c => catSel.innerHTML += `<option value="${c.name}">${c.name}</option>`); if(data.length === 0) { const lc = document.getElementById('ganttLeftCanvas'); const rc = document.getElementById('ganttRightCanvas'); if(lc && rc) { lc.width=0; rc.width=0; } const charts = ['gaugeCanvas','trendCanvas','radarChartCanvas','eisenhowerCanvas']; charts.forEach(id => { const c = document.getElementById(id); if(c) { const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); } }); document.getElementById('wordCloudContainer').innerHTML = '<div style="color:#999;">无数据</div>'; return; } try { const mainColor = getComputedStyle(document.body).getPropertyValue('--theme-color').trim(); drawSplitGantt(data, s, e); renderStats(data); filterReviewTable(); renderPriorityChart(data); renderGaugeChart(data, mainColor); renderCatComparison(data); renderTrendChart(data, mainColor); renderPeakHoursChart(data, mainColor); renderWeeklyChart(data, mainColor); renderDurationStats(data); renderRadarChart(data, mainColor, s, e); renderEisenhowerChart(data, mainColor, e); const words = {}; data.forEach(t => { const parts = t.title.split(/[\s,，.。]+/); parts.forEach(w => { if(w.length > 1) words[w] = (words[w] || 0) + 1; }); }); const sorted = Object.keys(words).map(k => ({ word: k, count: words[k] })).sort((a,b) => b.count - a.count).slice(0, 30); renderSpiralWordCloud('wordCloudContainer', sorted); } catch(err) { console.error(err); } }
         function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); ctx.fill(); }
         function renderStats(data) { const durMap = {}; let totalMin = 0; data.forEach(t => { const min = (parseInt(t.endTime.split(':')[0])*60 + parseInt(t.endTime.split(':')[1])) - (parseInt(t.startTime.split(':')[0])*60 + parseInt(t.startTime.split(':')[1])); const d = min > 0 ? min : 0; durMap[t.category] = (durMap[t.category]||0) + d; totalMin += d; }); let grad = [], currDeg = 0, legend = ''; const cats = Object.keys(durMap); cats.forEach((cat, index) => { const p = durMap[cat]/totalMin; const deg = p*360; const c = getColor(cat); grad.push(`${c} ${currDeg}deg ${currDeg+deg}deg`); currDeg += deg; legend += `<div style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;background:${c};border-radius:50%"></span>${cat} ${Math.round(p*100)}%</div>`; }); document.getElementById('pieChart').style.background = `conic-gradient(${grad.join(',')})`; document.getElementById('pieLegend').innerHTML = legend; }
